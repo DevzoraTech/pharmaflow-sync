@@ -126,8 +126,8 @@ export default function Staff() {
     onLeave: 0
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -426,8 +426,8 @@ export default function Staff() {
       employee.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.position.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
-    const matchesStatus = !statusFilter || employee.status === statusFilter;
+    const matchesDepartment = !departmentFilter || departmentFilter === 'all' || employee.department === departmentFilter;
+    const matchesStatus = !statusFilter || statusFilter === 'all' || employee.status === statusFilter;
     
     return matchesSearch && matchesDepartment && matchesStatus;
   });
@@ -559,11 +559,11 @@ export default function Staff() {
                     <SelectValue placeholder="All Departments" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Departments</SelectItem>
-                    <SelectItem value="Pharmacy">Pharmacy</SelectItem>
-                    <SelectItem value="Sales">Sales</SelectItem>
-                    <SelectItem value="Management">Management</SelectItem>
-                    <SelectItem value="Administration">Administration</SelectItem>
+                                    <SelectItem value="all">All Departments</SelectItem>
+                <SelectItem value="Pharmacy">Pharmacy</SelectItem>
+                <SelectItem value="Sales">Sales</SelectItem>
+                <SelectItem value="Management">Management</SelectItem>
+                <SelectItem value="Administration">Administration</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -571,10 +571,10 @@ export default function Staff() {
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="INACTIVE">Inactive</SelectItem>
-                    <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                                    <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="INACTIVE">Inactive</SelectItem>
+                <SelectItem value="SUSPENDED">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -746,3 +746,6 @@ export default function Staff() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}

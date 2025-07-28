@@ -135,7 +135,7 @@ interface SaleForm {
 export default function Sales() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState("");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");

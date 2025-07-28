@@ -115,8 +115,8 @@ export default function Inventory() {
   });
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [stockFilter, setStockFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -143,7 +143,7 @@ export default function Inventory() {
       
       const response = await medicinesAPI.getAll({
         search: searchTerm || undefined,
-        category: categoryFilter || undefined,
+        category: categoryFilter && categoryFilter !== "all" ? categoryFilter : undefined,
         lowStock: stockFilter === 'low' ? true : undefined,
         expiringSoon: stockFilter === 'expiring' ? true : undefined
       });
@@ -350,9 +350,9 @@ export default function Inventory() {
       item.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = !categoryFilter || item.category === categoryFilter;
+    const matchesCategory = !categoryFilter || categoryFilter === 'all' || item.category === categoryFilter;
     
-    const matchesStock = !stockFilter || 
+    const matchesStock = !stockFilter || stockFilter === 'all' || 
       (stockFilter === 'low' && item.quantity <= item.minStockLevel) ||
       (stockFilter === 'out' && item.quantity === 0) ||
       (stockFilter === 'expiring' && new Date(item.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
@@ -481,7 +481,7 @@ export default function Inventory() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Antibiotics">Antibiotics</SelectItem>
                 <SelectItem value="Pain Relief">Pain Relief</SelectItem>
                 <SelectItem value="Vitamins">Vitamins</SelectItem>
@@ -495,7 +495,7 @@ export default function Inventory() {
                 <SelectValue placeholder="Stock Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Items</SelectItem>
+                <SelectItem value="all">All Items</SelectItem>
                 <SelectItem value="low">Low Stock</SelectItem>
                 <SelectItem value="out">Out of Stock</SelectItem>
                 <SelectItem value="expiring">Expiring Soon</SelectItem>

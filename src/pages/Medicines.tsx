@@ -101,7 +101,7 @@ export default function Medicines() {
     expiringSoon: 0
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -157,8 +157,8 @@ export default function Medicines() {
       const response = await medicinesAPI.getAll({
         search: searchTerm || undefined,
         category: selectedCategory && selectedCategory !== "all" ? selectedCategory : undefined,
-        lowStock: lowStockFilter ? 'true' : undefined,
-        expiringSoon: expiringSoonFilter ? 'true' : undefined
+        lowStock: lowStockFilter || undefined,
+        expiringSoon: expiringSoonFilter || undefined
       });
       
       console.log('API response:', response);
@@ -651,7 +651,7 @@ export default function Medicines() {
                   onClick={() => {
                     setLowStockFilter(false);
                     setExpiringSoonFilter(false);
-                    setSelectedCategory("");
+                    setSelectedCategory("all");
                     setSearchTerm("");
                   }}
                 >

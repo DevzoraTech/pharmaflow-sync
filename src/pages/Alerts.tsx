@@ -70,8 +70,8 @@ export default function Alerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [severityFilter, setSeverityFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [severityFilter, setSeverityFilter] = useState("all");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   // Fetch alerts from API
@@ -324,7 +324,7 @@ export default function Alerts() {
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="STOCK">Stock Alerts</SelectItem>
                 <SelectItem value="EXPIRY">Expiry Alerts</SelectItem>
                 <SelectItem value="SYSTEM">System Alerts</SelectItem>
@@ -335,7 +335,7 @@ export default function Alerts() {
                 <SelectValue placeholder="All Severities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Severities</SelectItem>
+                <SelectItem value="all">All Severities</SelectItem>
                 <SelectItem value="HIGH">High</SelectItem>
                 <SelectItem value="MEDIUM">Medium</SelectItem>
                 <SelectItem value="LOW">Low</SelectItem>
