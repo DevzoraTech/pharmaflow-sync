@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("PHARMACIST") // ADMIN, PHARMACIST, TECHNICIAN, CASHIER
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sales       Sale[]
+  attendances Attendance[]
+
+  @@map("users")
+}
+
+model Medicine {
+  id            String   @id @default(cuid())
+  name          String
+  genericName   String?
+  manufacturer  String
+  category      String
+  description   String?
+  price         Float
+  quantity      Int
+  minStockLevel Int
+  expiryDate    DateTime
+  batchNumber   String
+  location      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  prescriptionItems PrescriptionItem[]
+  saleItems         SaleItem[]
+
+  @@map("medicines")
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  dateOfBirth DateTime?
+  allergies   String? // JSON string array
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  prescriptions Prescription[]
+  sales         Sale[]
+
+  @@map("customers")
+}
+
+model Prescription {
+  id                 String   @id @default(cuid())
+  prescriptionNumber String   @unique
+  customerId         String
+  doctorName         String
+  issueDate          DateTime
+  status             String   @default("PENDING") // PENDING, FILLED, PARTIAL, CANCELLED
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  customer Customer           @relation(fields: [customerId], references: [id])
+  items    PrescriptionItem[]
+  sales    Sale[]
+
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             String @id @default(cuid())
+  prescriptionId String
+  medicineId     String
+  quantity       Int
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
+
+  // Relations
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+  medicine     Medicine     @relation(fields: [medicineId], references: [id])
+
+  @@map("prescription_items")
+}
+
+model Sale {
+  id             String   @id @default(cuid())
+  customerId     String?
+  prescriptionId String?
+  subtotal       Float
+  tax            Float
+  discount       Float    @default(0)
+  total          Float
+  paymentMethod  String   // CASH, CARD, INSURANCE, CREDIT
+  saleDate       DateTime @default(now())
+  cashierId      String
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  customer     Customer?     @relation(fields: [customerId], references: [id])
+  prescription Prescription? @relation(fields: [prescriptionId], references: [id])
+  cashier      User          @relation(fields: [cashierId], references: [id])
+  items        SaleItem[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id         String @id @default(cuid())
+  saleId     String
+  medicineId String
+  quantity   Int
+  unitPrice  Float
+  subtotal   Float
+  discount   Float  @default(0)
+
+  // Relations
+  sale     Sale     @relation(fields: [saleId], references: [id])
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+
+  @@map("sale_items")
+}
+
+model Attendance {
+  id         String    @id @default(cuid())
+  employeeId String
+  date       DateTime
+  clockIn    DateTime?
+  clockOut   DateTime?
+  breakStart DateTime?
+  breakEnd   DateTime?
+  totalHours Float     @default(0)
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  employee User @relation(fields: [employeeId], references: [id])
+
+  @@map("attendances")
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  type      String   // STOCK, EXPIRY, SYSTEM, PRESCRIPTION
+  title     String
+  message   String
+  severity  String   // LOW, MEDIUM, HIGH, CRITICAL
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("alerts")
+}

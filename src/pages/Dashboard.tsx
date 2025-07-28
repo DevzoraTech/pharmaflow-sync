@@ -23,7 +23,7 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Sales Today"
-          value="$2,845"
+          value="UGX 2,845,000"
           change="+12% from yesterday"
           changeType="positive"
           icon={DollarSign}
@@ -118,7 +118,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-medium">$45.50</p>
+                <p className="font-medium">UGX 45,500</p>
                 <p className="text-sm text-muted-foreground">2 min ago</p>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-medium">$12.99</p>
+                <p className="font-medium">UGX 12,990</p>
                 <p className="text-sm text-muted-foreground">15 min ago</p>
               </div>
             </div>
