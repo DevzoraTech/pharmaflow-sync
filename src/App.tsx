@@ -3,11 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { authAPI } from "@/lib/api";
-import { UserData } from "@/types/auth";
+import { supabase } from '@/integrations/supabase/client';
+import type { User } from '@supabase/supabase-js';
 import Dashboard from "./pages/Dashboard";
 import Medicines from "./pages/Medicines";
 import Prescriptions from "./pages/Prescriptions";
@@ -23,24 +23,33 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const currentUser = authAPI.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
-    setIsLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLoginSuccess = (userData: UserData) => {
+  const handleLoginSuccess = (userData: User) => {
     setUser(userData);
   };
 
-  const handleLogout = () => {
-    authAPI.logout();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
@@ -77,10 +86,10 @@ const App = () => {
         <BrowserRouter>
           <Layout user={user} onLogout={handleLogout}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/medicines" element={<Medicines />} />
               <Route path="/prescriptions" element={<Prescriptions />} />
-              <Route path="/sales" element={<Sales />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/staff" element={<Staff />} />

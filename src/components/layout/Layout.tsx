@@ -1,10 +1,10 @@
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import { UserData } from "@/types/auth";
+import type { User } from '@supabase/supabase-js';
 
 interface LayoutProps {
   children: React.ReactNode;
-  user: UserData;
+  user: User;
   onLogout: () => void;
 }
 

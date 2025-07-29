@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Bell, Search, User, LogOut } from "lucide-react";
+import { Bell, Search, LogOut, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { UserData } from "@/types/auth";
+import type { User } from '@supabase/supabase-js';
 
 interface HeaderProps {
-  user: UserData;
+  user: User;
   onLogout: () => void;
 }
 
@@ -41,20 +41,20 @@ export function Header({ user, onLogout }: HeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
+              <UserIcon className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div>
-                <p className="font-medium">{user?.name}</p>
+                <p className="font-medium">{user?.user_metadata?.name || 'User'}</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user?.role?.toLowerCase()}</p>
+                <p className="text-xs text-muted-foreground capitalize">{user?.user_metadata?.role?.toLowerCase() || 'pharmacist'}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
+              <UserIcon className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onLogout}>
