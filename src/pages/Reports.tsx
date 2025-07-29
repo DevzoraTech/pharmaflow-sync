@@ -205,7 +205,7 @@ export default function Reports() {
 
       // Group by category
       const categoryMap = new Map();
-      medicines.forEach((med: unknown) => {
+      medicines.forEach((med: any) => {
         const category = med.category;
         if (!categoryMap.has(category)) {
           categoryMap.set(category, { count: 0, value: 0 });
@@ -233,7 +233,7 @@ export default function Reports() {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      const newCustomers = customers.filter((customer: unknown) => 
+      const newCustomers = customers.filter((customer: any) => 
         new Date(customer.createdAt) >= thirtyDaysAgo
       ).length;
 
@@ -246,10 +246,10 @@ export default function Reports() {
 
       // Process prescription report
       const prescriptions = prescriptionsData.prescriptions || [];
-      const pending = prescriptions.filter((p: unknown) => p.status === 'PENDING').length;
-      const filled = prescriptions.filter((p: unknown) => p.status === 'FILLED').length;
+      const pending = prescriptions.filter((p: any) => p.status === 'PENDING').length;
+      const filled = prescriptions.filter((p: any) => p.status === 'FILLED').length;
       const avgItems = prescriptions.length > 0 
-        ? prescriptions.reduce((sum: number, p: unknown) => sum + (Number(p._count?.items) || 0), 0) / prescriptions.length 
+        ? prescriptions.reduce((sum: number, p: any) => sum + (Number(p._count?.items) || 0), 0) / prescriptions.length 
         : 0;
 
       setPrescriptionReport({

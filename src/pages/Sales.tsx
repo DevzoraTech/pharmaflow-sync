@@ -181,14 +181,14 @@ export default function Sales() {
         endDate: dateFilter ? new Date(new Date(dateFilter).setHours(23, 59, 59, 999)).toISOString() : undefined
       });
       
-      setSales((response.sales || []).map((sale: unknown) => ({
+      setSales((response.sales || []).map((sale: any) => ({
         ...sale,
         id: String(sale.id),
         total: Number(sale.total) || 0,
         subtotal: Number(sale.subtotal) || 0,
         tax: Number(sale.tax) || 0,
         discount: Number(sale.discount) || 0,
-        items: (sale.items || []).map((item: unknown) => ({
+        items: (sale.items || []).map((item: any) => ({
           ...item,
           id: String(item.id),
           medicineId: String(item.medicineId),
