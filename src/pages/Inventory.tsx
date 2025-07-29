@@ -58,31 +58,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { medicinesAPI } from "@/lib/api";
+import { medicinesAPI, type MedicineWithStock } from "@/lib/api";
 
 // TypeScript interfaces
-interface InventoryItem {
-  id: string;
-  name: string;
-  genericName?: string;
-  manufacturer: string;
-  category: string;
-  batchNumber: string;
-  quantity: number;
-  minStockLevel: number;
-  maxStockLevel: number;
-  price: number;
-  costPrice: number;
-  expiryDate: string;
-  manufactureDate: string;
-  location: string;
-  supplier: string;
-  barcode?: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface InventoryStats {
   totalItems: number;
   lowStockItems: number;
@@ -104,7 +82,7 @@ interface StockMovement {
 }
 
 export default function Inventory() {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [inventory, setInventory] = useState<MedicineWithStock[]>([]);
   const [stats, setStats] = useState<InventoryStats>({
     totalItems: 0,
     lowStockItems: 0,
@@ -119,7 +97,7 @@ export default function Inventory() {
   const [stockFilter, setStockFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MedicineWithStock | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -127,7 +105,7 @@ export default function Inventory() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form states
-  const [formData, setFormData] = useState<Partial<InventoryItem>>({});
+  const [formData, setFormData] = useState<any>({});
   const [stockAdjustment, setStockAdjustment] = useState({
     type: 'IN' as 'IN' | 'OUT' | 'ADJUSTMENT',
     quantity: 0,
@@ -144,54 +122,18 @@ export default function Inventory() {
       const response = await medicinesAPI.getAll({
         search: searchTerm || undefined,
         category: categoryFilter && categoryFilter !== "all" ? categoryFilter : undefined,
-        lowStock: stockFilter === 'low' ? true : undefined,
-        expiringSoon: stockFilter === 'expiring' ? true : undefined
+        lowStock: stockFilter === 'low',
+        expiringSoon: stockFilter === 'expiring'
       });
       
-      const medicines = response.medicines || [];
-      
-      // Transform medicines data to inventory format
-      const inventoryData: InventoryItem[] = medicines.map((med: any) => ({
-        id: med.id,
-        name: med.name,
-        genericName: med.genericName,
-        manufacturer: med.manufacturer || 'Unknown',
-        category: med.category || 'General',
-        batchNumber: med.batchNumber || 'N/A',
-        quantity: Number(med.quantity) || 0,
-        minStockLevel: Number(med.minStockLevel) || 10,
-        maxStockLevel: Number(med.maxStockLevel) || 100,
-        price: Number(med.price) || 0,
-        costPrice: Number(med.costPrice) || Number(med.price) * 0.7 || 0,
-        expiryDate: med.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        manufactureDate: med.manufactureDate || new Date().toISOString(),
-        location: med.location || 'Main Store',
-        supplier: med.supplier || 'Unknown',
-        barcode: med.barcode,
-        description: med.description,
-        createdAt: med.createdAt || new Date().toISOString(),
-        updatedAt: med.updatedAt || new Date().toISOString()
-      }));
-      
-      setInventory(inventoryData);
-      
-      // Calculate stats
-      const now = new Date();
-      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      
-      const lowStock = inventoryData.filter(item => item.quantity <= item.minStockLevel).length;
-      const expiring = inventoryData.filter(item => new Date(item.expiryDate) <= thirtyDaysFromNow).length;
-      const outOfStock = inventoryData.filter(item => item.quantity === 0).length;
-      const totalValue = inventoryData.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-      const categories = new Set(inventoryData.map(item => item.category)).size;
-      
-      setStats({
-        totalItems: inventoryData.length,
-        lowStockItems: lowStock,
-        expiringSoon: expiring,
-        totalValue,
-        outOfStock,
-        categories
+      setInventory(response.medicines || []);
+      setStats(response.stats || {
+        totalItems: 0,
+        lowStockItems: 0,
+        expiringSoon: 0,
+        totalValue: 0,
+        outOfStock: 0,
+        categories: 0
       });
       
     } catch (err) {
@@ -209,13 +151,13 @@ export default function Inventory() {
   }, [fetchInventory]);
 
   // Handle view item
-  const handleViewItem = (item: InventoryItem) => {
+  const handleViewItem = (item: MedicineWithStock) => {
     setSelectedItem(item);
     setIsViewDialogOpen(true);
   };
 
   // Handle edit item
-  const handleEditItem = (item: InventoryItem) => {
+  const handleEditItem = (item: MedicineWithStock) => {
     setSelectedItem(item);
     setFormData(item);
     setIsEditDialogOpen(true);
@@ -225,24 +167,21 @@ export default function Inventory() {
   const handleAddItem = () => {
     setFormData({
       name: '',
-      genericName: '',
+      generic_name: '',
       manufacturer: '',
       category: '',
-      batchNumber: '',
+      batch_number: '',
       quantity: 0,
-      minStockLevel: 10,
-      maxStockLevel: 100,
+      min_stock_level: 10,
       price: 0,
-      costPrice: 0,
       location: 'Main Store',
-      supplier: '',
       description: ''
     });
     setIsAddDialogOpen(true);
   };
 
   // Handle stock adjustment
-  const handleStockAdjustment = (item: InventoryItem) => {
+  const handleStockAdjustment = (item: MedicineWithStock) => {
     setSelectedItem(item);
     setStockAdjustment({
       type: 'IN',
@@ -285,16 +224,11 @@ export default function Inventory() {
 
       if (!selectedItem) return;
 
-      let newQuantity = selectedItem.quantity;
-      if (stockAdjustment.type === 'IN') {
-        newQuantity += stockAdjustment.quantity;
-      } else if (stockAdjustment.type === 'OUT') {
-        newQuantity -= stockAdjustment.quantity;
-      } else {
-        newQuantity = stockAdjustment.quantity;
-      }
-
-      await medicinesAPI.update(selectedItem.id, { quantity: Math.max(0, newQuantity) });
+      await medicinesAPI.adjustStock(selectedItem.id, {
+        type: stockAdjustment.type,
+        quantity: stockAdjustment.quantity,
+        reason: stockAdjustment.reason
+      });
       
       setIsStockDialogOpen(false);
       await fetchInventory();
@@ -308,7 +242,7 @@ export default function Inventory() {
   };
 
   // Delete item
-  const handleDeleteItem = async (item: InventoryItem) => {
+  const handleDeleteItem = async (item: MedicineWithStock) => {
     if (!confirm(`Are you sure you want to delete ${item.name}?`)) return;
     
     try {
@@ -323,39 +257,38 @@ export default function Inventory() {
   };
 
   // Get stock status
-  const getStockStatus = (item: InventoryItem) => {
+  const getStockStatus = (item: MedicineWithStock) => {
     if (item.quantity === 0) return { label: 'Out of Stock', variant: 'destructive' as const };
-    if (item.quantity <= item.minStockLevel) return { label: 'Low Stock', variant: 'warning' as const };
-    if (item.quantity >= item.maxStockLevel) return { label: 'Overstock', variant: 'secondary' as const };
+    if (item.quantity <= item.min_stock_level) return { label: 'Low Stock', variant: 'warning' as const };
     return { label: 'In Stock', variant: 'success' as const };
   };
 
   // Get expiry status
-  const getExpiryStatus = (expiryDate: string) => {
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) return { label: 'Expired', variant: 'destructive' as const };
-    if (daysUntilExpiry <= 30) return { label: 'Expiring Soon', variant: 'warning' as const };
-    if (daysUntilExpiry <= 90) return { label: 'Expires in 3 months', variant: 'secondary' as const };
-    return { label: 'Good', variant: 'success' as const };
+  const getExpiryStatus = (expiryStatus: string) => {
+    switch (expiryStatus) {
+      case 'expired':
+        return { label: 'Expired', variant: 'destructive' as const };
+      case 'expiring_soon':
+        return { label: 'Expiring Soon', variant: 'warning' as const };
+      default:
+        return { label: 'Good', variant: 'success' as const };
+    }
   };
 
   // Filter inventory based on search and filters
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = !searchTerm || 
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.genericName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.generic_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.batch_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.manufacturer.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCategory = !categoryFilter || categoryFilter === 'all' || item.category === categoryFilter;
     
     const matchesStock = !stockFilter || stockFilter === 'all' || 
-      (stockFilter === 'low' && item.quantity <= item.minStockLevel) ||
+      (stockFilter === 'low' && item.quantity <= item.min_stock_level) ||
       (stockFilter === 'out' && item.quantity === 0) ||
-      (stockFilter === 'expiring' && new Date(item.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+      (stockFilter === 'expiring' && item.expiry_status === 'expiring_soon');
     
     return matchesSearch && matchesCategory && matchesStock;
   });
@@ -548,7 +481,7 @@ export default function Inventory() {
                 ) : (
                   filteredInventory.map((item) => {
                     const stockStatus = getStockStatus(item);
-                    const expiryStatus = getExpiryStatus(item.expiryDate);
+                    const expiryStatus = getExpiryStatus(item.expiry_status);
                     
                     return (
                       <TableRow key={item.id}>
@@ -556,13 +489,13 @@ export default function Inventory() {
                           <div>
                             <div className="font-medium">{item.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {item.genericName && `${item.genericName} • `}{item.manufacturer}
+                              {item.generic_name && `${item.generic_name} • `}{item.manufacturer}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <div>{item.batchNumber}</div>
+                            <div>{item.batch_number}</div>
                             <div className="text-muted-foreground">{item.category}</div>
                           </div>
                         </TableCell>
@@ -570,21 +503,18 @@ export default function Inventory() {
                           <div className="text-sm">
                             <div className="font-medium">{item.quantity}</div>
                             <div className="text-muted-foreground">
-                              Min: {item.minStockLevel} | Max: {item.maxStockLevel}
+                              Min: {item.min_stock_level}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
                             <div className="font-medium">UGX {item.price.toLocaleString()}</div>
-                            <div className="text-muted-foreground">
-                              Cost: UGX {item.costPrice.toLocaleString()}
-                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <div>{new Date(item.expiryDate).toLocaleDateString()}</div>
+                            <div>{new Date(item.expiry_date).toLocaleDateString()}</div>
                             <Badge variant={expiryStatus.variant} className="text-xs">
                               {expiryStatus.label}
                             </Badge>
@@ -593,7 +523,6 @@ export default function Inventory() {
                         <TableCell>
                           <div className="text-sm">
                             <div>{item.location}</div>
-                            <div className="text-muted-foreground">{item.supplier}</div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -664,7 +593,7 @@ export default function Inventory() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Generic Name</Label>
-                    <p className="text-sm">{selectedItem.genericName || 'N/A'}</p>
+                    <p className="text-sm">{selectedItem.generic_name || 'N/A'}</p>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Manufacturer</Label>
@@ -676,7 +605,7 @@ export default function Inventory() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Batch Number</Label>
-                    <p className="text-sm">{selectedItem.batchNumber}</p>
+                    <p className="text-sm">{selectedItem.batch_number}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -686,15 +615,11 @@ export default function Inventory() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Stock Levels</Label>
-                    <p className="text-sm">Min: {selectedItem.minStockLevel} | Max: {selectedItem.maxStockLevel}</p>
+                    <p className="text-sm">Min: {selectedItem.min_stock_level}</p>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Selling Price</Label>
                     <p className="text-sm">UGX {selectedItem.price.toLocaleString()}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Cost Price</Label>
-                    <p className="text-sm">UGX {selectedItem.costPrice.toLocaleString()}</p>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Stock Status</Label>
@@ -710,14 +635,10 @@ export default function Inventory() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Expiry Date</Label>
-                    <p className="text-sm">{new Date(selectedItem.expiryDate).toLocaleDateString()}</p>
-                    <Badge variant={getExpiryStatus(selectedItem.expiryDate).variant} className="text-xs">
-                      {getExpiryStatus(selectedItem.expiryDate).label}
+                    <p className="text-sm">{new Date(selectedItem.expiry_date).toLocaleDateString()}</p>
+                    <Badge variant={getExpiryStatus(selectedItem.expiry_status).variant} className="text-xs">
+                      {getExpiryStatus(selectedItem.expiry_status).label}
                     </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Manufacture Date</Label>
-                    <p className="text-sm">{new Date(selectedItem.manufactureDate).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -725,22 +646,12 @@ export default function Inventory() {
                     <Label className="text-sm font-medium">Location</Label>
                     <p className="text-sm">{selectedItem.location}</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Supplier</Label>
-                    <p className="text-sm">{selectedItem.supplier}</p>
-                  </div>
                 </div>
               </div>
 
               {/* Additional Information */}
-              {(selectedItem.barcode || selectedItem.description) && (
+              {selectedItem.description && (
                 <div className="space-y-4">
-                  {selectedItem.barcode && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Barcode</Label>
-                      <p className="text-sm font-mono">{selectedItem.barcode}</p>
-                    </div>
-                  )}
                   {selectedItem.description && (
                     <div className="space-y-2">
                       <Label className="text-sm font-medium">Description</Label>
@@ -785,8 +696,8 @@ export default function Inventory() {
                 <Label htmlFor="genericName">Generic Name</Label>
                 <Input
                   id="genericName"
-                  value={formData.genericName || ''}
-                  onChange={(e) => setFormData({...formData, genericName: e.target.value})}
+                  value={formData.generic_name || ''}
+                  onChange={(e) => setFormData({...formData, generic_name: e.target.value})}
                   placeholder="Enter generic name"
                 />
               </div>
@@ -823,28 +734,19 @@ export default function Inventory() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="batchNumber">Batch Number *</Label>
                 <Input
                   id="batchNumber"
-                  value={formData.batchNumber || ''}
-                  onChange={(e) => setFormData({...formData, batchNumber: e.target.value})}
+                  value={formData.batch_number || ''}
+                  onChange={(e) => setFormData({...formData, batch_number: e.target.value})}
                   placeholder="Enter batch number"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="barcode">Barcode</Label>
-                <Input
-                  id="barcode"
-                  value={formData.barcode || ''}
-                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
-                  placeholder="Enter barcode"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity *</Label>
                 <Input
@@ -862,25 +764,14 @@ export default function Inventory() {
                   id="minStockLevel"
                   type="number"
                   min="0"
-                  value={formData.minStockLevel || 10}
-                  onChange={(e) => setFormData({...formData, minStockLevel: parseInt(e.target.value) || 10})}
+                  value={formData.min_stock_level || 10}
+                  onChange={(e) => setFormData({...formData, min_stock_level: parseInt(e.target.value) || 10})}
                   placeholder="10"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maxStockLevel">Max Stock Level *</Label>
-                <Input
-                  id="maxStockLevel"
-                  type="number"
-                  min="0"
-                  value={formData.maxStockLevel || 100}
-                  onChange={(e) => setFormData({...formData, maxStockLevel: parseInt(e.target.value) || 100})}
-                  placeholder="100"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="price">Selling Price (UGX) *</Label>
                 <Input
@@ -893,42 +784,21 @@ export default function Inventory() {
                   placeholder="0.00"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="costPrice">Cost Price (UGX) *</Label>
-                <Input
-                  id="costPrice"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.costPrice || 0}
-                  onChange={(e) => setFormData({...formData, costPrice: parseFloat(e.target.value) || 0})}
-                  placeholder="0.00"
-                />
-              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="expiryDate">Expiry Date *</Label>
                 <Input
                   id="expiryDate"
                   type="date"
-                  value={formData.expiryDate ? new Date(formData.expiryDate).toISOString().split('T')[0] : ''}
-                  onChange={(e) => setFormData({...formData, expiryDate: e.target.value ? new Date(e.target.value).toISOString() : ''})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="manufactureDate">Manufacture Date</Label>
-                <Input
-                  id="manufactureDate"
-                  type="date"
-                  value={formData.manufactureDate ? new Date(formData.manufactureDate).toISOString().split('T')[0] : ''}
-                  onChange={(e) => setFormData({...formData, manufactureDate: e.target.value ? new Date(e.target.value).toISOString() : ''})}
+                  value={formData.expiry_date || ''}
+                  onChange={(e) => setFormData({...formData, expiry_date: e.target.value})}
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="location">Storage Location *</Label>
                 <Input
@@ -936,15 +806,6 @@ export default function Inventory() {
                   value={formData.location || ''}
                   onChange={(e) => setFormData({...formData, location: e.target.value})}
                   placeholder="e.g., Main Store, Refrigerator"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="supplier">Supplier</Label>
-                <Input
-                  id="supplier"
-                  value={formData.supplier || ''}
-                  onChange={(e) => setFormData({...formData, supplier: e.target.value})}
-                  placeholder="Enter supplier name"
                 />
               </div>
             </div>
