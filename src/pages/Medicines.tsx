@@ -51,30 +51,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { medicinesAPI } from "@/lib/api";
+import { medicinesAPI, type MedicineWithStock } from "@/lib/api";
 
 // TypeScript interfaces
-interface Medicine {
-  id: string;
-  name: string;
-  genericName?: string;
-  manufacturer: string;
-  category: string;
-  description?: string;
-  price: number;
-  quantity: number;
-  minStockLevel: number;
-  expiryDate: string;
-  batchNumber: string;
-  location?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface MedicineStats {
   totalMedicines: number;
   lowStockItems: number;
   expiringSoon: number;
+  totalValue: number;
+  outOfStock: number;
+  categories: number;
 }
 
 interface NewMedicineForm {
@@ -94,11 +81,14 @@ interface NewMedicineForm {
 
 
 export default function Medicines() {
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [medicines, setMedicines] = useState<MedicineWithStock[]>([]);
   const [stats, setStats] = useState<MedicineStats>({
     totalMedicines: 0,
     lowStockItems: 0,
-    expiringSoon: 0
+    expiringSoon: 0,
+    totalValue: 0,
+    outOfStock: 0,
+    categories: 0
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -149,26 +139,26 @@ export default function Medicines() {
       setIsLoading(true);
       setError("");
       
-      // Debug: Check if token exists
-      const token = localStorage.getItem('auth_token');
-      console.log('Auth token exists:', !!token);
-      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
-      
       const response = await medicinesAPI.getAll({
         search: searchTerm || undefined,
         category: selectedCategory && selectedCategory !== "all" ? selectedCategory : undefined,
-        lowStock: lowStockFilter || undefined,
-        expiringSoon: expiringSoonFilter || undefined
+        lowStock: lowStockFilter,
+        expiringSoon: expiringSoonFilter
       });
       
-      console.log('API response:', response);
       setMedicines(response.medicines || []);
-      setStats(response.stats || { totalMedicines: 0, lowStockItems: 0, expiringSoon: 0 });
+      setStats(response.stats || { 
+        totalMedicines: 0, 
+        lowStockItems: 0, 
+        expiringSoon: 0,
+        totalValue: 0,
+        outOfStock: 0,
+        categories: 0
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch medicines';
       setError(errorMessage);
       console.error('Error fetching medicines:', err);
-      console.error('Error details:', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -185,11 +175,15 @@ export default function Medicines() {
     return { label: "In Stock", variant: "success" as const };
   };
 
-  const isExpiringSoon = (expiryDate: string) => {
-    const expiry = new Date(expiryDate);
-    const today = new Date();
-    const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntilExpiry <= 30;
+  const getExpiryBadge = (expiryStatus: string) => {
+    switch (expiryStatus) {
+      case 'expired':
+        return <Badge variant="destructive">Expired</Badge>;
+      case 'expiring_soon':
+        return <Badge variant="warning">Expiring Soon</Badge>;
+      default:
+        return <Badge variant="success">Valid</Badge>;
+    }
   };
 
   const categories = [
@@ -216,16 +210,16 @@ export default function Medicines() {
       // Prepare data for API
       const medicineData = {
         name: newMedicine.name,
-        genericName: newMedicine.genericName || undefined,
+        generic_name: newMedicine.genericName || null,
         manufacturer: newMedicine.manufacturer,
         category: newMedicine.category,
-        description: newMedicine.description || undefined,
+        description: newMedicine.description || null,
         price: parseFloat(newMedicine.price) || 0,
         quantity: parseInt(newMedicine.quantity) || 0,
-        minStockLevel: parseInt(newMedicine.minStockLevel) || 0,
-        expiryDate: newMedicine.expiryDate ? new Date(newMedicine.expiryDate).toISOString() : new Date().toISOString(),
-        batchNumber: newMedicine.batchNumber,
-        location: newMedicine.location || undefined
+        min_stock_level: parseInt(newMedicine.minStockLevel) || 0,
+        expiry_date: newMedicine.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        batch_number: newMedicine.batchNumber,
+        location: newMedicine.location || null
       };
 
       await medicinesAPI.create(medicineData);
@@ -264,14 +258,14 @@ export default function Medicines() {
     setSelectedMedicine(medicine);
     setEditForm({
       name: medicine.name || "",
-      genericName: medicine.genericName || "",
+      genericName: medicine.generic_name || "",
       manufacturer: medicine.manufacturer || "",
       category: medicine.category || "",
       quantity: (medicine.quantity || 0).toString(),
-      minStockLevel: (medicine.minStockLevel || 0).toString(),
+      minStockLevel: (medicine.min_stock_level || 0).toString(),
       price: (medicine.price || 0).toString(),
-      expiryDate: medicine.expiryDate ? medicine.expiryDate.split('T')[0] : "", // Format for date input
-      batchNumber: medicine.batchNumber || "",
+      expiryDate: medicine.expiry_date || "",
+      batchNumber: medicine.batch_number || "",
       location: medicine.location || "",
       description: medicine.description || ""
     });
@@ -294,16 +288,16 @@ export default function Medicines() {
       // Prepare data for API
       const medicineData = {
         name: editForm.name,
-        genericName: editForm.genericName || undefined,
+        generic_name: editForm.genericName || null,
         manufacturer: editForm.manufacturer,
         category: editForm.category,
-        description: editForm.description || undefined,
+        description: editForm.description || null,
         price: parseFloat(editForm.price) || 0,
         quantity: parseInt(editForm.quantity) || 0,
-        minStockLevel: parseInt(editForm.minStockLevel) || 0,
-        expiryDate: editForm.expiryDate ? new Date(editForm.expiryDate).toISOString() : new Date().toISOString(),
-        batchNumber: editForm.batchNumber,
-        location: editForm.location || undefined
+        min_stock_level: parseInt(editForm.minStockLevel) || 0,
+        expiry_date: editForm.expiryDate,
+        batch_number: editForm.batchNumber,
+        location: editForm.location || null
       };
 
       await medicinesAPI.update(selectedMedicine.id, medicineData);
@@ -710,8 +704,7 @@ export default function Medicines() {
                   </TableRow>
                 ) : (
                   medicines.map((medicine: Medicine) => {
-                    const stockStatus = getStockStatus(medicine.quantity, medicine.minStockLevel);
-                    const expiringSoon = isExpiringSoon(medicine.expiryDate);
+                    const stockStatus = getStockStatus(medicine.quantity, medicine.min_stock_level);
                     
                     return (
                       <TableRow key={medicine.id}>
@@ -719,7 +712,7 @@ export default function Medicines() {
                           <div>
                             <div className="font-medium">{medicine.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {medicine.genericName && `${medicine.genericName} • `}{medicine.manufacturer}
+                              {medicine.generic_name && `${medicine.generic_name} • `}{medicine.manufacturer}
                             </div>
                           </div>
                         </TableCell>
@@ -737,13 +730,8 @@ export default function Medicines() {
                         <TableCell>UGX {medicine.price.toLocaleString()}</TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="text-sm">{new Date(medicine.expiryDate).toLocaleDateString()}</div>
-                            {expiringSoon && (
-                              <Badge variant="destructive" className="text-xs">
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                Expiring Soon
-                              </Badge>
-                            )}
+                            <div className="text-sm">{new Date(medicine.expiry_date).toLocaleDateString()}</div>
+                            {getExpiryBadge(medicine.expiry_status)}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -806,7 +794,7 @@ export default function Medicines() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Generic Name</Label>
-                  <p className="text-sm">{selectedMedicine.genericName || 'N/A'}</p>
+                  <p className="text-sm">{selectedMedicine.generic_name || 'N/A'}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -826,7 +814,7 @@ export default function Medicines() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Min Stock Level</Label>
-                  <p className="text-sm">{selectedMedicine.minStockLevel} units</p>
+                  <p className="text-sm">{selectedMedicine.min_stock_level} units</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Price</Label>
@@ -836,11 +824,11 @@ export default function Medicines() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Expiry Date</Label>
-                  <p className="text-sm">{new Date(selectedMedicine.expiryDate).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(selectedMedicine.expiry_date).toLocaleDateString()}</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Batch Number</Label>
-                  <p className="text-sm">{selectedMedicine.batchNumber}</p>
+                  <p className="text-sm">{selectedMedicine.batch_number}</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -856,17 +844,9 @@ export default function Medicines() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Stock Status</Label>
-                  <Badge variant={getStockStatus(selectedMedicine.quantity, selectedMedicine.minStockLevel).variant}>
-                    {getStockStatus(selectedMedicine.quantity, selectedMedicine.minStockLevel).label}
+                  <Badge variant={getStockStatus(selectedMedicine.quantity, selectedMedicine.min_stock_level).variant}>
+                    {getStockStatus(selectedMedicine.quantity, selectedMedicine.min_stock_level).label}
                   </Badge>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Expiry Status</Label>
-                  {isExpiringSoon(selectedMedicine.expiryDate) ? (
-                    <Badge variant="destructive">Expiring Soon</Badge>
-                  ) : (
-                    <Badge variant="success">Valid</Badge>
-                  )}
                 </div>
               </div>
             </div>

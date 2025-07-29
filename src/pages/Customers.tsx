@@ -48,25 +48,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { customersAPI } from "@/lib/api";
+import { customersAPI, type CustomerWithStats } from "@/lib/api";
 
 // TypeScript interfaces
-interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  dateOfBirth?: string;
-  allergies?: string; // JSON string
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    prescriptions: number;
-    sales: number;
-  };
-}
-
 interface CustomerForm {
   name: string;
   email: string;
@@ -77,7 +61,7 @@ interface CustomerForm {
 }
 
 export default function Customers() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<CustomerWithStats[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -93,7 +77,7 @@ export default function Customers() {
   });
 
   // Additional state for functionality
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithStats | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -127,8 +111,8 @@ export default function Customers() {
       
       // Calculate stats
       const total = response.customers?.length || 0;
-      const thisMonth = response.customers?.filter((customer: Customer) => {
-        const createdDate = new Date(customer.createdAt);
+      const thisMonth = response.customers?.filter((customer: CustomerWithStats) => {
+        const createdDate = new Date(customer.created_at);
         const now = new Date();
         return createdDate.getMonth() === now.getMonth() && 
                createdDate.getFullYear() === now.getFullYear();
@@ -167,11 +151,11 @@ export default function Customers() {
       // Prepare data for API
       const customerData: any = {
         name: newCustomer.name,
-        email: newCustomer.email || undefined,
-        phone: newCustomer.phone || undefined,
-        address: newCustomer.address || undefined,
-        dateOfBirth: newCustomer.dateOfBirth ? new Date(newCustomer.dateOfBirth).toISOString() : undefined,
-        allergies: newCustomer.allergies ? newCustomer.allergies.split(',').map(a => a.trim()).filter(a => a) : undefined
+        email: newCustomer.email || null,
+        phone: newCustomer.phone || null,
+        address: newCustomer.address || null,
+        date_of_birth: newCustomer.dateOfBirth || null,
+        allergies: newCustomer.allergies ? newCustomer.allergies.split(',').map(a => a.trim()).filter(a => a) : null
       };
 
       await customersAPI.create(customerData);
@@ -196,20 +180,20 @@ export default function Customers() {
     }
   };
 
-  const handleViewCustomer = (customer: Customer) => {
+  const handleViewCustomer = (customer: CustomerWithStats) => {
     setSelectedCustomer(customer);
     setIsViewDialogOpen(true);
   };
 
-  const handleEditCustomer = (customer: Customer) => {
+  const handleEditCustomer = (customer: CustomerWithStats) => {
     setSelectedCustomer(customer);
     setEditForm({
       name: customer.name,
       email: customer.email || "",
       phone: customer.phone || "",
       address: customer.address || "",
-      dateOfBirth: customer.dateOfBirth ? customer.dateOfBirth.split('T')[0] : "",
-      allergies: customer.allergies ? JSON.parse(customer.allergies).join(', ') : ""
+      dateOfBirth: customer.date_of_birth || "",
+      allergies: customer.allergies ? customer.allergies.join(', ') : ""
     });
     setIsEditDialogOpen(true);
   };
@@ -230,11 +214,11 @@ export default function Customers() {
       // Prepare data for API
       const customerData: unknown = {
         name: editForm.name,
-        email: editForm.email || undefined,
-        phone: editForm.phone || undefined,
-        address: editForm.address || undefined,
-        dateOfBirth: editForm.dateOfBirth ? new Date(editForm.dateOfBirth).toISOString() : undefined,
-        allergies: editForm.allergies ? editForm.allergies.split(',').map(a => a.trim()).filter(a => a) : undefined
+        email: editForm.email || null,
+        phone: editForm.phone || null,
+        address: editForm.address || null,
+        date_of_birth: editForm.dateOfBirth || null,
+        allergies: editForm.allergies ? editForm.allergies.split(',').map(a => a.trim()).filter(a => a) : null
       };
 
       await customersAPI.update(selectedCustomer.id, customerData);
@@ -251,7 +235,7 @@ export default function Customers() {
     }
   };
 
-  const handleDeleteCustomer = (customer: Customer) => {
+  const handleDeleteCustomer = (customer: CustomerWithStats) => {
     setSelectedCustomer(customer);
     setIsDeleteDialogOpen(true);
   };
@@ -274,15 +258,6 @@ export default function Customers() {
       setError(err instanceof Error ? err.message : 'Failed to delete customer');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const parseAllergies = (allergiesStr?: string): string[] => {
-    if (!allergiesStr) return [];
-    try {
-      return JSON.parse(allergiesStr);
-    } catch {
-      return [];
     }
   };
 
@@ -481,8 +456,7 @@ export default function Customers() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  customers.map((customer: Customer) => {
-                    const allergies = parseAllergies(customer.allergies);
+                  customers.map((customer: CustomerWithStats) => {
                     
                     return (
                       <TableRow key={customer.id}>
@@ -490,10 +464,10 @@ export default function Customers() {
                           <div>
                             <div className="font-medium">{customer.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {customer.dateOfBirth && (
+                              {customer.date_of_birth && (
                                 <>
                                   <Calendar className="w-3 h-3 inline mr-1" />
-                                  {new Date(customer.dateOfBirth).toLocaleDateString()}
+                                  {new Date(customer.date_of_birth).toLocaleDateString()}
                                 </>
                               )}
                             </div>
@@ -536,16 +510,16 @@ export default function Customers() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {allergies.length > 0 ? (
+                          {customer.allergies && customer.allergies.length > 0 ? (
                             <div className="space-y-1">
-                              {allergies.slice(0, 2).map((allergy, index) => (
+                              {customer.allergies.slice(0, 2).map((allergy, index) => (
                                 <Badge key={index} variant="destructive" className="text-xs mr-1">
                                   {allergy}
                                 </Badge>
                               ))}
-                              {allergies.length > 2 && (
+                              {customer.allergies.length > 2 && (
                                 <Badge variant="outline" className="text-xs">
-                                  +{allergies.length - 2} more
+                                  +{customer.allergies.length - 2} more
                                 </Badge>
                               )}
                             </div>
@@ -611,8 +585,8 @@ export default function Customers() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Date of Birth</Label>
                   <p className="text-sm">
-                    {selectedCustomer.dateOfBirth 
-                      ? new Date(selectedCustomer.dateOfBirth).toLocaleDateString()
+                    {selectedCustomer.date_of_birth 
+                      ? new Date(selectedCustomer.date_of_birth).toLocaleDateString()
                       : 'N/A'
                     }
                   </p>
@@ -635,8 +609,8 @@ export default function Customers() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Allergies</Label>
                 <div className="flex flex-wrap gap-1">
-                  {parseAllergies(selectedCustomer.allergies).length > 0 ? (
-                    parseAllergies(selectedCustomer.allergies).map((allergy, index) => (
+                  {selectedCustomer.allergies && selectedCustomer.allergies.length > 0 ? (
+                    selectedCustomer.allergies.map((allergy, index) => (
                       <Badge key={index} variant="destructive" className="text-xs">
                         {allergy}
                       </Badge>
@@ -659,11 +633,11 @@ export default function Customers() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Registered</Label>
-                  <p className="text-sm">{new Date(selectedCustomer.createdAt).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(selectedCustomer.created_at).toLocaleDateString()}</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Last Updated</Label>
-                  <p className="text-sm">{new Date(selectedCustomer.updatedAt).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(selectedCustomer.updated_at).toLocaleDateString()}</p>
                 </div>
               </div>
             </div>

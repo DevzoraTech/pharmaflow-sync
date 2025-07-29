@@ -57,66 +57,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { salesAPI, customersAPI, medicinesAPI } from "@/lib/api";
+import { salesAPI, customersAPI, medicinesAPI, type SaleWithDetails, type Customer, type Medicine } from "@/lib/api";
 
 // TypeScript interfaces
-interface SaleItem {
-  id: string;
-  medicineId: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  discount: number;
-  medicine: {
-    id: string;
-    name: string;
-    genericName?: string;
-  };
-}
-
-interface Sale {
-  id: string;
-  customerId?: string;
-  prescriptionId?: string;
-  subtotal: number;
-  tax: number;
-  discount: number;
-  total: number;
-  paymentMethod: 'CASH' | 'CARD' | 'INSURANCE' | 'CREDIT';
-  saleDate: string;
-  notes?: string;
-  customer?: {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-  };
-  prescription?: {
-    id: string;
-    prescriptionNumber: string;
-  };
-  cashier: {
-    id: string;
-    name: string;
-  };
-  items: SaleItem[];
-}
-
-interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-}
-
-interface Medicine {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  genericName?: string;
-}
-
 interface CartItem {
   medicineId: string;
   medicine: Medicine;
@@ -133,7 +76,7 @@ interface SaleForm {
 }
 
 export default function Sales() {
-  const [sales, setSales] = useState<Sale[]>([]);
+  const [sales, setSales] = useState<SaleWithDetails[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
@@ -155,7 +98,7 @@ export default function Sales() {
   const [medicineSearch, setMedicineSearch] = useState("");
 
   // Additional states
-  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [selectedSale, setSelectedSale] = useState<SaleWithDetails | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
   // Stats
@@ -177,27 +120,11 @@ export default function Sales() {
       
       const response = await salesAPI.getAll({
         paymentMethod: paymentMethodFilter && paymentMethodFilter !== "all" ? paymentMethodFilter : undefined,
-        startDate: dateFilter ? new Date(dateFilter).toISOString() : undefined,
-        endDate: dateFilter ? new Date(new Date(dateFilter).setHours(23, 59, 59, 999)).toISOString() : undefined
+        startDate: dateFilter ? `${dateFilter}T00:00:00` : undefined,
+        endDate: dateFilter ? `${dateFilter}T23:59:59` : undefined
       });
       
-      setSales((response.sales || []).map((sale: any) => ({
-        ...sale,
-        id: String(sale.id),
-        total: Number(sale.total) || 0,
-        subtotal: Number(sale.subtotal) || 0,
-        tax: Number(sale.tax) || 0,
-        discount: Number(sale.discount) || 0,
-        items: (sale.items || []).map((item: any) => ({
-          ...item,
-          id: String(item.id),
-          medicineId: String(item.medicineId),
-          quantity: Number(item.quantity) || 0,
-          unitPrice: Number(item.unitPrice) || 0,
-          subtotal: Number(item.subtotal) || 0,
-          discount: Number(item.discount) || 0
-        }))
-      })));
+      setSales(response.sales || []);
       
       // Get today's stats
       const statsResponse = await salesAPI.getStats({
@@ -296,7 +223,7 @@ export default function Sales() {
 
       // Prepare sale data
       const saleData = {
-        customerId: saleForm.customerId || undefined,
+        customerId: saleForm.customerId || null,
         items: cart.map(item => ({
           medicineId: item.medicineId,
           quantity: item.quantity,
@@ -305,7 +232,7 @@ export default function Sales() {
         })),
         paymentMethod: saleForm.paymentMethod,
         discount: saleForm.discount,
-        notes: saleForm.notes || undefined
+        notes: saleForm.notes || null
       };
 
       await salesAPI.create(saleData);
@@ -329,7 +256,7 @@ export default function Sales() {
     }
   };
 
-  const handleViewSale = (sale: Sale) => {
+  const handleViewSale = (sale: SaleWithDetails) => {
     setSelectedSale(sale);
     setIsViewDialogOpen(true);
   };
@@ -347,7 +274,7 @@ export default function Sales() {
 
   const filteredMedicines = medicines.filter(medicine =>
     medicine.name.toLowerCase().includes(medicineSearch.toLowerCase()) ||
-    (medicine.genericName && medicine.genericName.toLowerCase().includes(medicineSearch.toLowerCase()))
+    (medicine.generic_name && medicine.generic_name.toLowerCase().includes(medicineSearch.toLowerCase()))
   );
 
   const { subtotal, tax, total } = calculateCartTotal();
@@ -421,7 +348,7 @@ export default function Sales() {
                       <div className="flex-1">
                         <div className="font-medium">{medicine.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {medicine.genericName && `${medicine.genericName} • `}
+                          {medicine.generic_name && `${medicine.generic_name} • `}
                           UGX {medicine.price.toLocaleString()} • Stock: {medicine.quantity}
                         </div>
                       </div>
@@ -700,15 +627,15 @@ export default function Sales() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sales.map((sale: Sale) => (
+                  sales.map((sale: SaleWithDetails) => (
                     <TableRow key={sale.id}>
                       <TableCell>
                         <div className="font-medium">
-                          {sale.id.substring(0, 8)}...
+                          #{sale.id.substring(0, 8)}
                         </div>
                         {sale.prescription && (
                           <div className="text-xs text-muted-foreground">
-                            Rx: {sale.prescription.prescriptionNumber}
+                            Rx: {sale.prescription.prescription_number}
                           </div>
                         )}
                       </TableCell>
@@ -726,17 +653,17 @@ export default function Sales() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {new Date(sale.saleDate).toLocaleDateString()}
+                          {new Date(sale.sale_date).toLocaleDateString()}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(sale.saleDate).toLocaleTimeString()}
+                          {new Date(sale.sale_date).toLocaleTimeString()}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{sale.items.length}</span> items
+                        <span className="font-medium">{sale.sale_items.length}</span> items
                       </TableCell>
                       <TableCell>
-                        {getPaymentMethodBadge(sale.paymentMethod)}
+                        {getPaymentMethodBadge(sale.payment_method)}
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">UGX {sale.total.toLocaleString()}</div>
@@ -799,8 +726,8 @@ export default function Sales() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Date & Time</Label>
                   <p className="text-sm">
-                    {new Date(selectedSale.saleDate).toLocaleDateString()} at{' '}
-                    {new Date(selectedSale.saleDate).toLocaleTimeString()}
+                    {new Date(selectedSale.sale_date).toLocaleDateString()} at{' '}
+                    {new Date(selectedSale.sale_date).toLocaleTimeString()}
                   </p>
                 </div>
               </div>
@@ -829,7 +756,7 @@ export default function Sales() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Prescription</Label>
                   <p className="text-sm">
-                    Prescription #{selectedSale.prescription.prescriptionNumber}
+                    Prescription #{selectedSale.prescription.prescription_number}
                   </p>
                 </div>
               )}
@@ -849,20 +776,20 @@ export default function Sales() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedSale.items.map((item, index) => (
-                        <TableRow key={`${item.medicineId}-${index}`}>
+                      {selectedSale.sale_items.map((item, index) => (
+                        <TableRow key={`${item.medicine_id}-${index}`}>
                           <TableCell>
                             <div>
                               <div className="font-medium">{item.medicine.name}</div>
-                              {item.medicine.genericName && (
+                              {item.medicine.generic_name && (
                                 <div className="text-xs text-muted-foreground">
-                                  {item.medicine.genericName}
+                                  {item.medicine.generic_name}
                                 </div>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>{item.quantity}</TableCell>
-                          <TableCell>UGX {item.unitPrice.toLocaleString()}</TableCell>
+                          <TableCell>UGX {item.unit_price.toLocaleString()}</TableCell>
                           <TableCell>
                             {item.discount > 0 ? `-UGX ${item.discount.toLocaleString()}` : '-'}
                           </TableCell>
@@ -878,7 +805,7 @@ export default function Sales() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Payment Method</Label>
-                  {getPaymentMethodBadge(selectedSale.paymentMethod)}
+                  {getPaymentMethodBadge(selectedSale.payment_method)}
                 </div>
                 <div className="bg-muted p-4 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">

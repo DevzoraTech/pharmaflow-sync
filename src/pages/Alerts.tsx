@@ -25,24 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { alertsAPI } from "@/lib/api";
+import { alertsAPI, type Alert } from "@/lib/api";
 
 // TypeScript interfaces
-interface AlertItem {
-  id: string;
-  type: 'STOCK' | 'EXPIRY' | 'SYSTEM';
-  severity: 'HIGH' | 'MEDIUM' | 'LOW';
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-  medicineId?: string;
-  medicine?: {
-    id: string;
-    name: string;
-    genericName?: string;
-  };
-}
 
 interface AlertStats {
   total: number;
@@ -60,7 +45,7 @@ interface AlertStats {
 }
 
 export default function Alerts() {
-  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [stats, setStats] = useState<AlertStats>({
     total: 0,
     unread: 0,
@@ -82,8 +67,8 @@ export default function Alerts() {
       
       const [alertsResponse, statsResponse] = await Promise.all([
         alertsAPI.getAll({
-          type: typeFilter || undefined,
-          severity: severityFilter || undefined,
+          type: typeFilter && typeFilter !== "all" ? typeFilter : undefined,
+          severity: severityFilter && severityFilter !== "all" ? severityFilter : undefined,
           isRead: showUnreadOnly ? false : undefined
         }),
         alertsAPI.getStats()
@@ -131,10 +116,11 @@ export default function Alerts() {
   const markAllAsRead = async () => {
     try {
       await alertsAPI.markAllAsRead({
-        type: typeFilter || undefined,
-        severity: severityFilter || undefined
+        type: typeFilter && typeFilter !== "all" ? typeFilter : undefined,
+        severity: severityFilter && severityFilter !== "all" ? severityFilter : undefined
       });
       setAlerts(alerts.map(alert => ({ ...alert, isRead: true })));
+      setAlerts(alerts.map(alert => ({ ...alert, is_read: true })));
       setStats(prev => ({ ...prev, unread: 0 }));
     } catch (err) {
       console.error('Error marking all alerts as read:', err);
@@ -179,8 +165,7 @@ export default function Alerts() {
   const filteredAlerts = alerts.filter(alert => {
     const matchesSearch = searchTerm === "" || 
       alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      alert.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (alert.medicine?.name && alert.medicine.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      alert.message.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesSearch;
   });
@@ -398,7 +383,7 @@ export default function Alerts() {
                 <div 
                   key={alert.id} 
                   className={`flex items-start gap-4 p-4 border rounded-lg transition-colors ${
-                    alert.isRead ? 'bg-background' : 'bg-muted/30'
+                    alert.is_read ? 'bg-background' : 'bg-muted/30'
                   }`}
                 >
                   <div className="mt-1">
@@ -406,11 +391,11 @@ export default function Alerts() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className={`font-medium ${!alert.isRead ? 'font-semibold' : ''}`}>
+                      <h4 className={`font-medium ${!alert.is_read ? 'font-semibold' : ''}`}>
                         {alert.title}
                       </h4>
                       {getSeverityBadge(alert.severity)}
-                      {!alert.isRead && (
+                      {!alert.is_read && (
                         <Badge variant="outline" className="text-xs">
                           New
                         </Badge>
@@ -418,20 +403,14 @@ export default function Alerts() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">
                       {alert.message}
-                      {alert.medicine && (
-                        <span className="font-medium text-foreground">
-                          {' '}{alert.medicine.name}
-                          {alert.medicine.genericName && ` (${alert.medicine.genericName})`}
-                        </span>
-                      )}
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
-                      {formatTimeAgo(alert.createdAt)}
+                      {formatTimeAgo(alert.created_at)}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!alert.isRead && (
+                    {!alert.is_read && (
                       <Button
                         size="sm"
                         variant="ghost"

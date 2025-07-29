@@ -57,59 +57,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { prescriptionsAPI, customersAPI, medicinesAPI } from "@/lib/api";
+import { prescriptionsAPI, customersAPI, medicinesAPI, type PrescriptionWithDetails, type Customer, type Medicine } from "@/lib/api";
 
 // TypeScript interfaces
-interface PrescriptionItem {
-  id: string;
-  medicineId: string;
-  quantity: number;
-  dosage: string;
-  frequency: string;
-  duration: string;
-  instructions?: string;
-  medicine: {
-    id: string;
-    name: string;
-    price: number;
-  };
-}
-
-interface Prescription {
-  id: string;
-  prescriptionNumber: string;
-  customerId: string;
-  doctorName: string;
-  issueDate: string;
-  status: 'PENDING' | 'FILLED' | 'PARTIAL' | 'CANCELLED';
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-  customer: {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-  };
-  items: PrescriptionItem[];
-  _count: {
-    items: number;
-  };
-}
-
-interface Customer {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-}
-
-interface Medicine {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
 
 interface PrescriptionForm {
   customerId: string;
@@ -128,7 +78,7 @@ interface PrescriptionForm {
 }
 
 export default function Prescriptions() {
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [prescriptions, setPrescriptions] = useState<PrescriptionWithDetails[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -156,7 +106,7 @@ export default function Prescriptions() {
   });
 
   // Additional states for functionality
-  const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
+  const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionWithDetails | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -266,15 +216,15 @@ export default function Prescriptions() {
         customerId: newPrescription.customerId,
         doctorName: newPrescription.doctorName,
         prescriptionNumber: newPrescription.prescriptionNumber,
-        issueDate: newPrescription.issueDate ? new Date(newPrescription.issueDate).toISOString() : new Date().toISOString(),
-        notes: newPrescription.notes || undefined,
+        issueDate: newPrescription.issueDate || new Date().toISOString().split('T')[0],
+        notes: newPrescription.notes || null,
         items: newPrescription.items.map(item => ({
           medicineId: item.medicineId,
           quantity: parseInt(item.quantity),
           dosage: item.dosage,
           frequency: item.frequency,
           duration: item.duration,
-          instructions: item.instructions || undefined
+          instructions: item.instructions || null
         }))
       };
 
@@ -312,7 +262,7 @@ export default function Prescriptions() {
     setIsViewDialogOpen(true);
   };
 
-  const handleFillPrescription = (prescription: Prescription) => {
+  const handleFillPrescription = (prescription: PrescriptionWithDetails) => {
     setSelectedPrescription(prescription);
     setIsFillDialogOpen(true);
   };
@@ -341,7 +291,7 @@ export default function Prescriptions() {
     }
   };
 
-  const handleCancelPrescription = (prescription: Prescription) => {
+  const handleCancelPrescription = (prescription: PrescriptionWithDetails) => {
     setSelectedPrescription(prescription);
     setIsCancelDialogOpen(true);
   };
@@ -398,8 +348,8 @@ export default function Prescriptions() {
     setNewPrescription({ ...newPrescription, items: updatedItems });
   };
 
-  const calculatePrescriptionTotal = (prescription: Prescription) => {
-    return prescription.items.reduce((total, item) => {
+  const calculatePrescriptionTotal = (prescription: PrescriptionWithDetails) => {
+    return prescription.prescription_items.reduce((total, item) => {
       return total + (item.quantity * item.medicine.price);
     }, 0);
   };
@@ -519,7 +469,7 @@ export default function Prescriptions() {
                           <SelectContent>
                             {medicines.map((medicine) => (
                               <SelectItem key={medicine.id} value={medicine.id}>
-                                {medicine.name} - ${medicine.price} (Stock: {medicine.quantity})
+                                {medicine.name} - UGX {medicine.price} (Stock: {medicine.quantity})
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -717,7 +667,7 @@ export default function Prescriptions() {
                     <TableRow key={prescription.id}>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{prescription.prescriptionNumber}</div>
+                          <div className="font-medium">{prescription.prescription_number}</div>
                           <div className="text-sm text-muted-foreground">
                             ID: {prescription.id.substring(0, 8)}...
                           </div>
@@ -732,9 +682,10 @@ export default function Prescriptions() {
                         </div>
                       </TableCell>
                       <TableCell>{prescription.doctorName}</TableCell>
+                      <TableCell>{prescription.doctor_name}</TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {new Date(prescription.issueDate).toLocaleDateString()}
+                          {new Date(prescription.issue_date).toLocaleDateString()}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -805,7 +756,7 @@ export default function Prescriptions() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Prescription Number</Label>
-                  <p className="text-sm">{selectedPrescription.prescriptionNumber}</p>
+                  <p className="text-sm">{selectedPrescription.prescription_number}</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Status</Label>
@@ -825,18 +776,18 @@ export default function Prescriptions() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Doctor</Label>
-                  <p className="text-sm">{selectedPrescription.doctorName}</p>
+                  <p className="text-sm">{selectedPrescription.doctor_name}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Issue Date</Label>
-                  <p className="text-sm">{new Date(selectedPrescription.issueDate).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(selectedPrescription.issue_date).toLocaleDateString()}</p>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Total Amount</Label>
-                  <p className="text-sm font-medium">${calculatePrescriptionTotal(selectedPrescription).toFixed(2)}</p>
+                  <p className="text-sm font-medium">UGX {calculatePrescriptionTotal(selectedPrescription).toLocaleString()}</p>
                 </div>
               </div>
 
@@ -844,7 +795,7 @@ export default function Prescriptions() {
               <div className="space-y-4">
                 <Label className="text-base font-medium">Prescription Items</Label>
                 <div className="space-y-3">
-                  {selectedPrescription.items.map((item, index) => (
+                  {selectedPrescription.prescription_items.map((item, index) => (
                     <div key={item.id} className="border rounded-lg p-4">
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div>
@@ -878,7 +829,7 @@ export default function Prescriptions() {
                       )}
                       <div className="mt-2 pt-2 border-t">
                         <p className="text-sm">
-                          <span className="font-medium">Subtotal:</span> ${(item.quantity * item.medicine.price).toFixed(2)}
+                          <span className="font-medium">Subtotal:</span> UGX {(item.quantity * item.medicine.price).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -917,11 +868,11 @@ export default function Prescriptions() {
               <div className="bg-muted p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Prescription Summary</h4>
                 <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Number:</span> {selectedPrescription.prescriptionNumber}</p>
+                  <p><span className="font-medium">Number:</span> {selectedPrescription.prescription_number}</p>
                   <p><span className="font-medium">Customer:</span> {selectedPrescription.customer.name}</p>
-                  <p><span className="font-medium">Doctor:</span> {selectedPrescription.doctorName}</p>
+                  <p><span className="font-medium">Doctor:</span> {selectedPrescription.doctor_name}</p>
                   <p><span className="font-medium">Items:</span> {selectedPrescription._count.items}</p>
-                  <p><span className="font-medium">Total:</span> ${calculatePrescriptionTotal(selectedPrescription).toFixed(2)}</p>
+                  <p><span className="font-medium">Total:</span> UGX {calculatePrescriptionTotal(selectedPrescription).toLocaleString()}</p>
                 </div>
               </div>
 
@@ -961,19 +912,19 @@ export default function Prescriptions() {
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>${calculatePrescriptionTotal(selectedPrescription).toFixed(2)}</span>
+                    <span>UGX {calculatePrescriptionTotal(selectedPrescription).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax (10%):</span>
-                    <span>${(calculatePrescriptionTotal(selectedPrescription) * 0.1).toFixed(2)}</span>
+                    <span>UGX {(calculatePrescriptionTotal(selectedPrescription) * 0.1).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount:</span>
-                    <span>-${fillForm.discount.toFixed(2)}</span>
+                    <span>-UGX {fillForm.discount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-medium border-t pt-1">
                     <span>Total:</span>
-                    <span>${(calculatePrescriptionTotal(selectedPrescription) * 1.1 - fillForm.discount).toFixed(2)}</span>
+                    <span>UGX {(calculatePrescriptionTotal(selectedPrescription) * 1.1 - fillForm.discount).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -1011,12 +962,12 @@ export default function Prescriptions() {
               <div className="bg-muted p-4 rounded-lg">
                 <h4 className="font-medium mb-2">Prescription Details</h4>
                 <div className="space-y-1 text-sm">
-                  <p><span className="font-medium">Number:</span> {selectedPrescription.prescriptionNumber}</p>
+                  <p><span className="font-medium">Number:</span> {selectedPrescription.prescription_number}</p>
                   <p><span className="font-medium">Customer:</span> {selectedPrescription.customer.name}</p>
-                  <p><span className="font-medium">Doctor:</span> {selectedPrescription.doctorName}</p>
+                  <p><span className="font-medium">Doctor:</span> {selectedPrescription.doctor_name}</p>
                   <p><span className="font-medium">Status:</span> {selectedPrescription.status}</p>
                   <p><span className="font-medium">Items:</span> {selectedPrescription._count.items}</p>
-                  <p><span className="font-medium">Total Value:</span> ${calculatePrescriptionTotal(selectedPrescription).toFixed(2)}</p>
+                  <p><span className="font-medium">Total Value:</span> UGX {calculatePrescriptionTotal(selectedPrescription).toLocaleString()}</p>
                 </div>
               </div>
               <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
