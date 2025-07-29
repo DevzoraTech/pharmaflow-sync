@@ -263,15 +263,15 @@ export default function Medicines() {
   const handleEditMedicine = (medicine: Medicine) => {
     setSelectedMedicine(medicine);
     setEditForm({
-      name: medicine.name,
+      name: medicine.name || "",
       genericName: medicine.genericName || "",
-      manufacturer: medicine.manufacturer,
-      category: medicine.category,
-      quantity: medicine.quantity.toString(),
-      minStockLevel: medicine.minStockLevel.toString(),
-      price: medicine.price.toString(),
-      expiryDate: medicine.expiryDate.split('T')[0], // Format for date input
-      batchNumber: medicine.batchNumber,
+      manufacturer: medicine.manufacturer || "",
+      category: medicine.category || "",
+      quantity: (medicine.quantity || 0).toString(),
+      minStockLevel: (medicine.minStockLevel || 0).toString(),
+      price: (medicine.price || 0).toString(),
+      expiryDate: medicine.expiryDate ? medicine.expiryDate.split('T')[0] : "", // Format for date input
+      batchNumber: medicine.batchNumber || "",
       location: medicine.location || "",
       description: medicine.description || ""
     });

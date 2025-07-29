@@ -202,7 +202,7 @@ export const salesAPI = {
     return data;
   },
 
-  async create(sale: any) {
+  async create(sale: unknown) {
     const { data, error } = await supabase.from('sales').insert(sale).select().single();
     if (error) throw error;
     return data;
@@ -264,9 +264,32 @@ export const alertsAPI = {
   },
 
   async getStats() {
-    const { data, error } = await supabase.from('alerts').select('*').eq('is_read', false);
+    const { data, error } = await supabase.from('alerts').select('*');
     if (error) throw error;
-    return { unreadCount: data.length };
+    
+    const alerts = data || [];
+    const unreadAlerts = alerts.filter(alert => !alert.is_read);
+    
+    // Count by type
+    const byType = {
+      STOCK: alerts.filter(alert => alert.type === 'STOCK').length,
+      EXPIRY: alerts.filter(alert => alert.type === 'EXPIRY').length,
+      SYSTEM: alerts.filter(alert => alert.type === 'SYSTEM').length
+    };
+    
+    // Count by severity
+    const bySeverity = {
+      HIGH: alerts.filter(alert => alert.severity === 'HIGH').length,
+      MEDIUM: alerts.filter(alert => alert.severity === 'MEDIUM').length,
+      LOW: alerts.filter(alert => alert.severity === 'LOW').length
+    };
+    
+    return {
+      total: alerts.length,
+      unread: unreadAlerts.length,
+      byType,
+      bySeverity
+    };
   },
 
   async checkStock() {

@@ -8,11 +8,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface LoginFormProps {
-  onLoginSuccess: (user: any) => void;
+  onLoginSuccess: (user: unknown) => void;
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {
-  const [email, setEmail] = useState('admin@pharmacare.com');
+  const [email, setEmail] = useState('admin@greenleaf.com');
   const [password, setPassword] = useState('admin123');
   const [name, setName] = useState('');
   const [role, setRole] = useState('PHARMACIST');
@@ -79,11 +79,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">P</span>
+              <span className="text-primary-foreground font-bold">G</span>
             </div>
-            <span className="text-xl font-semibold">PharmaCare</span>
+            <span className="text-xl font-semibold">Green Leaf</span>
           </div>
-          <CardTitle>Welcome to PharmaCare</CardTitle>
+          <CardTitle>Welcome to Green Leaf</CardTitle>
           <CardDescription>
             Sign in or create an account to access the pharmacy management system
           </CardDescription>
@@ -199,7 +199,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
           <div className="mt-6 p-4 bg-muted rounded-lg">
             <p className="text-sm font-medium mb-2">Demo Account:</p>
             <div className="text-xs space-y-1">
-              <p><strong>Email:</strong> admin@pharmacare.com</p>
+              <p><strong>Email:</strong> admin@greenleaf.com</p>
               <p><strong>Password:</strong> admin123</p>
             </div>
           </div>
