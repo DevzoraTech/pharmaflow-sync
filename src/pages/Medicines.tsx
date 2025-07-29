@@ -111,7 +111,7 @@ export default function Medicines() {
   });
 
   // Additional state for new functionality
-  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+  const [selectedMedicine, setSelectedMedicine] = useState<MedicineWithStock | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -249,12 +249,12 @@ export default function Medicines() {
     }
   };
 
-  const handleViewMedicine = (medicine: Medicine) => {
+  const handleViewMedicine = (medicine: MedicineWithStock) => {
     setSelectedMedicine(medicine);
     setIsViewDialogOpen(true);
   };
 
-  const handleEditMedicine = (medicine: Medicine) => {
+  const handleEditMedicine = (medicine: MedicineWithStock) => {
     setSelectedMedicine(medicine);
     setEditForm({
       name: medicine.name || "",
@@ -314,7 +314,7 @@ export default function Medicines() {
     }
   };
 
-  const handleDeleteMedicine = (medicine: Medicine) => {
+  const handleDeleteMedicine = (medicine: MedicineWithStock) => {
     setSelectedMedicine(medicine);
     setIsDeleteDialogOpen(true);
   };
@@ -326,14 +326,33 @@ export default function Medicines() {
       setIsSubmitting(true);
       setError("");
 
+      console.log('Deleting medicine:', selectedMedicine.id);
       await medicinesAPI.delete(selectedMedicine.id);
+      console.log('Medicine deleted successfully');
+      
+      // Immediately update the UI by removing the medicine from the state
+      setMedicines(prevMedicines => {
+        const updatedMedicines = prevMedicines.filter(med => med.id !== selectedMedicine.id);
+        console.log('Updated medicines count:', updatedMedicines.length);
+        return updatedMedicines;
+      });
+      
+      // Update stats immediately
+      setStats(prevStats => ({
+        ...prevStats,
+        totalMedicines: prevStats.totalMedicines - 1,
+        lowStockItems: selectedMedicine.quantity <= selectedMedicine.min_stock_level ? 
+          Math.max(0, prevStats.lowStockItems - 1) : prevStats.lowStockItems
+      }));
       
       setIsDeleteDialogOpen(false);
       setSelectedMedicine(null);
       
-      // Refresh medicines list
+      // Also refresh from server to ensure consistency
+      console.log('Refreshing medicines list from server...');
       await fetchMedicines();
     } catch (err) {
+      console.error('Delete error:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete medicine');
     } finally {
       setIsSubmitting(false);
@@ -703,7 +722,7 @@ export default function Medicines() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  medicines.map((medicine: Medicine) => {
+                  medicines.map((medicine: MedicineWithStock) => {
                     const stockStatus = getStockStatus(medicine.quantity, medicine.min_stock_level);
                     
                     return (

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -7,10 +6,6 @@ import {
   DollarSign, 
   Users, 
   AlertTriangle,
-  TrendingUp,
-  Package,
-  FileText,
-  Calendar,
   RefreshCw,
   Loader2
 } from "lucide-react";
@@ -18,9 +13,7 @@ import { dashboardAPI } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<any>(null);
-  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
-  const [salesChart, setSalesChart] = useState<any[]>([]);
+  const [stats, setStats] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -29,15 +22,8 @@ export default function Dashboard() {
       setIsLoading(true);
       setError("");
       
-      const [statsData, transactionsData, chartData] = await Promise.all([
-        dashboardAPI.getStats(),
-        dashboardAPI.getRecentTransactions(5),
-        dashboardAPI.getSalesChart(7)
-      ]);
-      
+      const statsData = await dashboardAPI.getStats();
       setStats(statsData);
-      setRecentTransactions(transactionsData);
-      setSalesChart(chartData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       console.error('Dashboard error:', err);
@@ -64,7 +50,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening at your pharmacy.</p>
+          <p className="text-muted-foreground">Welcome back! Here's what's happening at Green Leaf Pharmacy.</p>
         </div>
         <Button variant="outline" onClick={fetchDashboardData} disabled={isLoading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -81,131 +67,55 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Sales Today"
-          value={`UGX ${stats?.totalRevenue?.toLocaleString() || '0'}`}
-          change={`${stats?.totalSales || 0} transactions today`}
-          changeType="positive"
-          icon={DollarSign}
-        />
-        <StatsCard
-          title="Medicines in Stock"
-          value={stats?.totalMedicines?.toString() || '0'}
-          change={`${stats?.lowStockItems || 0} low stock items`}
-          changeType={stats?.lowStockItems > 0 ? "negative" : "neutral"}
-          icon={Pill}
-        />
-        <StatsCard
-          title="Total Customers"
-          value={stats?.totalCustomers?.toString() || '0'}
-          change="Registered customers"
-          changeType="positive"
-          icon={Users}
-        />
-        <StatsCard
-          title="Expiring Soon"
-          value={stats?.expiringSoon?.toString() || '0'}
-          change="Next 30 days"
-          changeType={stats?.expiringSoon > 0 ? "negative" : "neutral"}
-          icon={AlertTriangle}
-        />
-      </div>
-
-      {/* Charts and Recent Activity */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Sales Overview
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales Today</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              {salesChart.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-7 gap-2 text-center">
-                    {salesChart.map((day, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                        </div>
-                        <div className="bg-primary/20 rounded-lg p-2">
-                          <div className="text-sm font-medium">UGX {day.sales.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground">{day.transactions} sales</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  No sales data available
-                </div>
-              )}
-            </div>
+            <div className="text-2xl font-bold">UGX {stats?.totalRevenue?.toLocaleString() || '0'}</div>
+            <p className="text-xs text-muted-foreground">{stats?.totalSales || 0} transactions today</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Quick Alerts
-            {recentTransactions.length > 0 ? (
-              <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        <DollarSign className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Sale #{transaction.id.substring(0, 8)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {transaction.customer?.name || 'Walk-in'} - 
-                          {transaction.prescription ? ' Prescription fill' : ' Direct sale'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">UGX {Number(transaction.total).toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(transaction.sale_date).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No recent transactions</p>
-                <p className="text-sm">Sales will appear here</p>
-              </div>
-            )}
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Unread Alerts</p>
-                  <p className="text-xs text-muted-foreground">{stats.unreadAlerts} alerts need attention</p>
-                </div>
-              </div>
-            )}
-            {(!stats?.lowStockItems && !stats?.expiringSoon && !stats?.pendingPrescriptions && !stats?.unreadAlerts) && (
-              <div className="text-center py-8 text-muted-foreground">
-                <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No alerts at this time</p>
-                <p className="text-sm">Your pharmacy is running smoothly!</p>
-              </div>
-            )}
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Medicines in Stock</CardTitle>
+            <Pill className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalMedicines || 0}</div>
+            <p className="text-xs text-muted-foreground">{stats?.lowStockItems || 0} low stock items</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.totalCustomers || 0}</div>
+            <p className="text-xs text-muted-foreground">Registered customers</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.expiringSoon || 0}</div>
+            <p className="text-xs text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Transactions */}
+      {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -224,6 +134,7 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">2 min ago</p>
               </div>
             </div>
+            
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
@@ -237,6 +148,22 @@ export default function Dashboard() {
               <div className="text-right">
                 <p className="font-medium">UGX 12,990</p>
                 <p className="text-sm text-muted-foreground">15 min ago</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">Sale #001232</p>
+                  <p className="text-sm text-muted-foreground">Mike Johnson - Direct sale</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-medium">UGX 32,100</p>
+                <p className="text-sm text-muted-foreground">5 min ago</p>
               </div>
             </div>
           </div>

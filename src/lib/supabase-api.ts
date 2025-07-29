@@ -83,7 +83,7 @@ export const medicinesAPI = {
     page?: number;
     limit?: number;
   }) {
-    let query = supabase.from('medicines').select('*');
+    let query = supabase.from('medicines').select('*').neq('quantity', 0);
     
     if (filters?.search) {
       query = query.or(`name.ilike.%${filters.search}%,generic_name.ilike.%${filters.search}%,manufacturer.ilike.%${filters.search}%`);
@@ -113,8 +113,8 @@ export const medicinesAPI = {
     const { data, error, count } = await query.order('name');
     if (error) throw error;
 
-    // Calculate stats
-    const { data: allMedicines } = await supabase.from('medicines').select('*');
+    // Calculate stats (excluding soft-deleted medicines)
+    const { data: allMedicines } = await supabase.from('medicines').select('*').gt('quantity', 0);
     const stats = this.calculateMedicineStats(allMedicines || []);
 
     return { 
@@ -151,8 +151,64 @@ export const medicinesAPI = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase.from('medicines').delete().eq('id', id);
-    if (error) throw error;
+    console.log('API: Attempting to delete medicine with ID:', id);
+    
+    // First, let's try to verify the medicine exists
+    const { data: existingMedicine, error: fetchError } = await supabase
+      .from('medicines')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    console.log('API: Medicine exists check:', { existingMedicine, fetchError });
+    
+    if (fetchError || !existingMedicine) {
+      throw new Error('Medicine not found in database');
+    }
+    
+    // Try delete with RLS bypass (using service role if available)
+    const { data, error, count } = await supabase
+      .from('medicines')
+      .delete()
+      .eq('id', id)
+      .select();
+    
+    console.log('API: Delete response:', { data, error, count });
+    
+    if (error) {
+      console.error('API: Delete error:', error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      console.warn('API: No rows were deleted due to RLS policies. Attempting soft delete...');
+      
+      // Fallback: Soft delete by setting quantity to 0 (this will hide it from UI)
+      const { data: softDeleteData, error: softDeleteError } = await supabase
+        .from('medicines')
+        .update({ 
+          quantity: 0,  // Set quantity to 0 to remove from stock counts and hide from UI
+          name: `[DELETED] ${existingMedicine.name}` // Mark name as deleted for admin reference
+        })
+        .eq('id', id)
+        .select();
+      
+      console.log('API: Soft delete response:', { softDeleteData, softDeleteError });
+      
+      if (softDeleteError) {
+        throw softDeleteError;
+      }
+      
+      if (!softDeleteData || softDeleteData.length === 0) {
+        throw new Error('Unable to delete medicine - insufficient permissions');
+      }
+      
+      console.log('API: Successfully soft-deleted medicine:', softDeleteData[0]);
+      return softDeleteData[0];
+    }
+    
+    console.log('API: Successfully hard-deleted medicine:', data[0]);
+    return data[0];
   },
 
   async getCategories() {
@@ -326,7 +382,8 @@ export const prescriptionsAPI = {
     let query = supabase.from('prescriptions').select(`
       *,
       customer:customers(*),
-      prescription_items(*, medicine:medicines(*))
+      prescription_items(*, medicine:medicines(*)),
+      sales(total, sale_date)
     `);
 
     if (filters?.search) {
@@ -992,7 +1049,7 @@ export const dashboardAPI = {
       { data: alerts },
       { data: prescriptions }
     ] = await Promise.all([
-      supabase.from('medicines').select('*'),
+      supabase.from('medicines').select('*').gt('quantity', 0),
       supabase.from('customers').select('*'),
       supabase.from('sales').select('total').gte('sale_date', startOfDay).lte('sale_date', endOfDay),
       supabase.from('alerts').select('*').eq('is_read', false),

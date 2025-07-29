@@ -58,6 +58,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { prescriptionsAPI, customersAPI, medicinesAPI, type PrescriptionWithDetails, type Customer, type Medicine } from "@/lib/api";
+import { Prescription } from "@/types";
+import { Prescription } from "@/types";
+import { Prescription } from "@/types";
+import { Prescription } from "@/types";
+import { Prescription } from "@/types";
 
 // TypeScript interfaces
 
@@ -154,15 +159,54 @@ export default function Prescriptions() {
       
       // Calculate stats
       const pending = response.prescriptions?.filter((p: Prescription) => p.status === 'PENDING').length || 0;
-      const today = new Date().toDateString();
-      const filledToday = response.prescriptions?.filter((p: Prescription) => 
-        p.status === 'FILLED' && new Date(p.updatedAt).toDateString() === today
-      ).length || 0;
+      const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+      
+      console.log('Calculating prescription stats:', {
+        totalPrescriptions: response.prescriptions?.length,
+        today,
+        prescriptions: response.prescriptions?.map(p => ({
+          id: p.id,
+          status: p.status,
+          updated_at: p.updated_at,
+          created_at: p.created_at,
+          total: p.total
+        }))
+      });
+      
+      const filledToday = response.prescriptions?.filter((p: Prescription) => {
+        if (p.status !== 'FILLED') return false;
+        
+        // Try both updated_at and created_at fields, and handle different date formats
+        const updateDate = p.updated_at || p.created_at;
+        if (!updateDate) return false;
+        
+        const prescriptionDate = new Date(updateDate).toISOString().split('T')[0];
+        return prescriptionDate === today;
+      }).length || 0;
+      
+      // Calculate actual revenue from filled prescriptions today
+      const todayRevenue = response.prescriptions?.filter((p: Prescription) => {
+        if (p.status !== 'FILLED') return false;
+        const updateDate = p.updated_at || p.created_at;
+        if (!updateDate) return false;
+        const prescriptionDate = new Date(updateDate).toISOString().split('T')[0];
+        return prescriptionDate === today;
+      }).reduce((sum, p) => {
+        // Get the total from the associated sale
+        const sale = p.sales && p.sales.length > 0 ? p.sales[0] : null;
+        return sum + (sale?.total || 0);
+      }, 0) || 0;
+      
+      console.log('Prescription stats calculated:', {
+        pending,
+        filledToday,
+        todayRevenue
+      });
       
       setStats({
         pending,
         filledToday,
-        totalRevenue: filledToday * 52 // Mock calculation
+        totalRevenue: todayRevenue
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch prescriptions';
@@ -587,7 +631,7 @@ export default function Prescriptions() {
             <FileText className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue}</div>
+            <div className="text-2xl font-bold">UGX {stats.totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">From prescriptions today</p>
           </CardContent>
         </Card>
@@ -695,7 +739,7 @@ export default function Prescriptions() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          ${calculatePrescriptionTotal(prescription).toFixed(2)}
+                          UGX {calculatePrescriptionTotal(prescription).toLocaleString()}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(prescription.status)}</TableCell>
