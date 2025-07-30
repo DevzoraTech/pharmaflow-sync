@@ -12,8 +12,27 @@ import {
 import { dashboardAPI } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+interface DashboardStats {
+  totalRevenue: number;
+  totalSales: number;
+  totalMedicines: number;
+  lowStockItems: number;
+  totalCustomers: number;
+  expiringSoon: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'sale' | 'prescription' | 'medicine';
+  title: string;
+  description: string;
+  amount?: number;
+  timestamp: string;
+}
+
 export default function Dashboard() {
-  const [stats, setStats] = useState<unknown>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,8 +41,22 @@ export default function Dashboard() {
       setIsLoading(true);
       setError("");
       
-      const statsData = await dashboardAPI.getStats();
+      const [statsData, transactionsData] = await Promise.all([
+        dashboardAPI.getStats(),
+        dashboardAPI.getRecentTransactions(5)
+      ]);
+      
       setStats(statsData);
+      // Convert transactions to activity format
+      const activities = transactionsData.map((transaction: any) => ({
+        id: transaction.id,
+        type: 'sale' as const,
+        title: `Sale #${transaction.id.substring(0, 8)}`,
+        description: transaction.customer?.name || 'Unknown Customer',
+        amount: transaction.total,
+        timestamp: transaction.sale_date
+      }));
+      setRecentActivity(activities);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
       console.error('Dashboard error:', err);
@@ -119,53 +152,35 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">Sale #001234</p>
-                  <p className="text-sm text-muted-foreground">John Doe - Prescription fill</p>
-                </div>
+            {recentActivity.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No recent activity</p>
+                <p className="text-sm">Sales and transactions will appear here</p>
               </div>
-              <div className="text-right">
-                <p className="font-medium">UGX 45,500</p>
-                <p className="text-sm text-muted-foreground">2 min ago</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-primary" />
+            ) : (
+              recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {activity.amount && (
+                      <p className="font-medium">UGX {activity.amount.toLocaleString()}</p>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(activity.timestamp).toLocaleTimeString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">Sale #001233</p>
-                  <p className="text-sm text-muted-foreground">Sarah Smith - OTC purchase</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-medium">UGX 12,990</p>
-                <p className="text-sm text-muted-foreground">15 min ago</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <DollarSign className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">Sale #001232</p>
-                  <p className="text-sm text-muted-foreground">Mike Johnson - Direct sale</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-medium">UGX 32,100</p>
-                <p className="text-sm text-muted-foreground">5 min ago</p>
-              </div>
-            </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

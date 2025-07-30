@@ -94,7 +94,7 @@ export const medicinesAPI = {
     }
     
     if (filters?.lowStock) {
-      query = query.lt('quantity', supabase.rpc('get_min_stock_level'));
+      query = query.lt('quantity', 10); // Use static value instead of RPC call
     }
     
     if (filters?.expiringSoon) {
@@ -830,7 +830,7 @@ export const alertsAPI = {
     const { data: medicines, error } = await supabase
       .from('medicines')
       .select('*')
-      .lte('quantity', supabase.rpc('get_min_stock_level'));
+      .lte('quantity', 10); // Use static value instead of RPC call
 
     if (error) throw error;
 

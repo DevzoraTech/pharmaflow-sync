@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert as AlertComponent, AlertDescription } from "@/components/ui/alert";
 import { alertsAPI, type Alert } from "@/lib/api";
 
 // TypeScript interfaces
@@ -339,10 +339,10 @@ export default function Alerts() {
 
       {/* Error Display */}
       {error && (
-        <Alert variant="destructive">
+        <AlertComponent variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        </AlertComponent>
       )}
 
       {/* Alerts List */}

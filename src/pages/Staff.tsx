@@ -66,6 +66,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { usersAPI, attendanceAPI } from "@/lib/supabase-api";
 import type { User, Attendance } from "@/lib/supabase-api";
+import AttendanceTable from "@/components/staff/AttendanceTable";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserWithAttendance extends User {
@@ -555,60 +556,7 @@ export default function Staff() {
         </TabsContent>
 
         <TabsContent value="attendance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Attendance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Clock In</TableHead>
-                    <TableHead>Clock Out</TableHead>
-                    <TableHead>Total Hours</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attendance.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No attendance records found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    attendance.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell>
-                          <div className="font-medium">{record.employee.name}</div>
-                          <div className="text-sm text-muted-foreground">{record.employee.role}</div>
-                        </TableCell>
-                        <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          {record.clock_in ? new Date(record.clock_in).toLocaleTimeString() : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {record.clock_out ? new Date(record.clock_out).toLocaleTimeString() : '-'}
-                        </TableCell>
-                        <TableCell>{record.total_hours.toFixed(1)} hrs</TableCell>
-                        <TableCell>
-                          {record.clock_in && record.clock_out ? (
-                            <Badge variant="success">Complete</Badge>
-                          ) : record.clock_in ? (
-                            <Badge variant="warning">In Progress</Badge>
-                          ) : (
-                            <Badge variant="secondary">Not Started</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <AttendanceTable />
         </TabsContent>
       </Tabs>
 

@@ -58,11 +58,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { prescriptionsAPI, customersAPI, medicinesAPI, type PrescriptionWithDetails, type Customer, type Medicine } from "@/lib/api";
-import { Prescription } from "@/types";
-import { Prescription } from "@/types";
-import { Prescription } from "@/types";
-import { Prescription } from "@/types";
-import { Prescription } from "@/types";
 
 // TypeScript interfaces
 
@@ -158,7 +153,7 @@ export default function Prescriptions() {
       setPrescriptions(response.prescriptions || []);
       
       // Calculate stats
-      const pending = response.prescriptions?.filter((p: Prescription) => p.status === 'PENDING').length || 0;
+      const pending = response.prescriptions?.filter((p: PrescriptionWithDetails) => p.status === 'PENDING').length || 0;
       const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
       
       console.log('Calculating prescription stats:', {
@@ -173,7 +168,7 @@ export default function Prescriptions() {
         }))
       });
       
-      const filledToday = response.prescriptions?.filter((p: Prescription) => {
+      const filledToday = response.prescriptions?.filter((p: PrescriptionWithDetails) => {
         if (p.status !== 'FILLED') return false;
         
         // Try both updated_at and created_at fields, and handle different date formats
@@ -185,7 +180,7 @@ export default function Prescriptions() {
       }).length || 0;
       
       // Calculate actual revenue from filled prescriptions today
-      const todayRevenue = response.prescriptions?.filter((p: Prescription) => {
+      const todayRevenue = response.prescriptions?.filter((p: PrescriptionWithDetails) => {
         if (p.status !== 'FILLED') return false;
         const updateDate = p.updated_at || p.created_at;
         if (!updateDate) return false;
@@ -301,7 +296,7 @@ export default function Prescriptions() {
     }
   };
 
-  const handleViewPrescription = (prescription: Prescription) => {
+  const handleViewPrescription = (prescription: PrescriptionWithDetails) => {
     setSelectedPrescription(prescription);
     setIsViewDialogOpen(true);
   };
@@ -707,7 +702,7 @@ export default function Prescriptions() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  prescriptions.map((prescription: Prescription) => (
+                  prescriptions.map((prescription: PrescriptionWithDetails) => (
                     <TableRow key={prescription.id}>
                       <TableCell>
                         <div>
@@ -725,7 +720,6 @@ export default function Prescriptions() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{prescription.doctorName}</TableCell>
                       <TableCell>{prescription.doctor_name}</TableCell>
                       <TableCell>
                         <div className="text-sm">

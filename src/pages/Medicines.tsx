@@ -1036,7 +1036,7 @@ export default function Medicines() {
               <div className="bg-muted p-4 rounded-lg">
                 <h4 className="font-medium">{selectedMedicine.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {selectedMedicine.genericName && `${selectedMedicine.genericName} • `}
+                  {selectedMedicine.generic_name && `${selectedMedicine.generic_name} • `}
                   {selectedMedicine.manufacturer} • {selectedMedicine.category}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
