@@ -163,8 +163,7 @@ export default function Prescriptions() {
           id: p.id,
           status: p.status,
           updated_at: p.updated_at,
-          created_at: p.created_at,
-          total: p.total
+          created_at: p.created_at
         }))
       });
       
@@ -187,9 +186,8 @@ export default function Prescriptions() {
         const prescriptionDate = new Date(updateDate).toISOString().split('T')[0];
         return prescriptionDate === today;
       }).reduce((sum, p) => {
-        // Get the total from the associated sale
-        const sale = p.sales && p.sales.length > 0 ? p.sales[0] : null;
-        return sum + (sale?.total || 0);
+        // Calculate total from prescription items
+        return sum + calculatePrescriptionTotal(p);
       }, 0) || 0;
       
       console.log('Prescription stats calculated:', {

@@ -583,7 +583,7 @@ export default function Reports() {
                   <div className="text-center py-8 text-muted-foreground">
                     <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Category breakdown</p>
-                    <p className="text-sm">{inventoryReport?.categories || 0} categories</p>
+                    <p className="text-sm">{inventoryReport?.topCategories?.length || 0} categories</p>
                   </div>
                 </CardContent>
               </Card>

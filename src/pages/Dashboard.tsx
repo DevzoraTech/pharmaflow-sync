@@ -79,16 +79,19 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening at Green Leaf Pharmacy.</p>
+    <div className="space-y-8">
+      <div className="bg-gradient-primary text-primary-foreground p-8 rounded-2xl shadow-glow">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
+            <p className="text-primary-foreground/80 text-lg">Welcome back! Here's what's happening at Green Leaf Pharmacy.</p>
+          </div>
+          <Button variant="outline" onClick={fetchDashboardData} disabled={isLoading} 
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
-        <Button variant="outline" onClick={fetchDashboardData} disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
       </div>
 
       {error && (
@@ -99,48 +102,56 @@ export default function Dashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales Today</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales Today</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <DollarSign className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">UGX {stats?.totalRevenue?.toLocaleString() || '0'}</div>
-            <p className="text-xs text-muted-foreground">{stats?.totalSales || 0} transactions today</p>
+            <div className="text-3xl font-bold text-foreground mb-2">UGX {stats?.totalRevenue?.toLocaleString() || '0'}</div>
+            <p className="text-sm text-muted-foreground">{stats?.totalSales || 0} transactions today</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Medicines in Stock</CardTitle>
-            <Pill className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Medicines in Stock</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Pill className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalMedicines || 0}</div>
-            <p className="text-xs text-muted-foreground">{stats?.lowStockItems || 0} low stock items</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats?.totalMedicines || 0}</div>
+            <p className="text-sm text-muted-foreground">{stats?.lowStockItems || 0} low stock items</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Customers</CardTitle>
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalCustomers || 0}</div>
-            <p className="text-xs text-muted-foreground">Registered customers</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats?.totalCustomers || 0}</div>
+            <p className="text-sm text-muted-foreground">Registered customers</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Expiring Soon</CardTitle>
+            <div className="p-2 bg-warning/10 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.expiringSoon || 0}</div>
-            <p className="text-xs text-muted-foreground">Next 30 days</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats?.expiringSoon || 0}</div>
+            <p className="text-sm text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
       </div>
