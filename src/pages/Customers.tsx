@@ -149,7 +149,14 @@ export default function Customers() {
       }
 
       // Prepare data for API
-      const customerData: any = {
+      const customerData: {
+        name: string;
+        email: string | null;
+        phone: string | null;
+        address: string | null;
+        date_of_birth: string | null;
+        allergies: string[] | null;
+      } = {
         name: newCustomer.name,
         email: newCustomer.email || null,
         phone: newCustomer.phone || null,
@@ -212,7 +219,14 @@ export default function Customers() {
       }
 
       // Prepare data for API
-      const customerData: unknown = {
+      const customerData: {
+        name: string;
+        email: string | null;
+        phone: string | null;
+        address: string | null;
+        date_of_birth: string | null;
+        allergies: string[] | null;
+      } = {
         name: editForm.name,
         email: editForm.email || null,
         phone: editForm.phone || null,
@@ -363,41 +377,47 @@ export default function Customers() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Customers
             </CardTitle>
-            <Users className="h-4 w-4 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-            <p className="text-xs text-muted-foreground">Registered customers</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">{stats.totalCustomers}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Registered customers</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               New This Month
             </CardTitle>
-            <UserPlus className="h-4 w-4 text-success" />
+            <div className="p-2 bg-success/10 rounded-lg">
+              <UserPlus className="h-4 w-4 md:h-5 md:w-5 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{stats.newThisMonth}</div>
-            <p className="text-xs text-muted-foreground">New registrations</p>
+            <div className="text-xl md:text-3xl font-bold text-success mb-2">{stats.newThisMonth}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">New registrations</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Active Today
             </CardTitle>
-            <Activity className="h-4 w-4 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Activity className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeToday}</div>
-            <p className="text-xs text-muted-foreground">Customers served today</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">{stats.activeToday}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Customers served today</p>
           </CardContent>
         </Card>
       </div>

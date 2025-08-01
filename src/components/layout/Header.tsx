@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Bell, Search, LogOut, User as UserIcon, Clock, AlertTriangle, CheckCircle, Menu } from "lucide-react";
+import { Bell, Search, LogOut, User as UserIcon, Clock, AlertTriangle, CheckCircle, Menu, Package, Users, FileText, ShoppingCart, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -12,16 +12,25 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { User } from '@supabase/supabase-js';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { alertsAPI } from "@/lib/supabase-api";
-import type { Alert } from "@/lib/supabase-api";
+import { alertsAPI, medicinesAPI, customersAPI, prescriptionsAPI, salesAPI } from "@/lib/supabase-api";
+import type { Alert, Medicine, Customer, PrescriptionWithDetails, SaleWithDetails } from "@/lib/supabase-api";
 import { useToast } from "@/hooks/use-toast";
 import { MobileMenu } from "./MobileMenu";
 
 interface HeaderProps {
   user: User;
   onLogout: () => void;
+}
+
+interface SearchResult {
+  type: 'medicine' | 'customer' | 'prescription' | 'sale';
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  data: Medicine | Customer | PrescriptionWithDetails | SaleWithDetails;
 }
 
 export function Header({ user, onLogout }: HeaderProps) {
@@ -31,6 +40,14 @@ export function Header({ user, onLogout }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch alerts
   const fetchAlerts = async () => {
@@ -56,6 +73,164 @@ export function Header({ user, onLogout }: HeaderProps) {
     const interval = setInterval(fetchAlerts, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Search functionality
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results: SearchResult[] = [];
+
+      // Search medicines
+      try {
+        const medicinesResponse = await medicinesAPI.getAll({ search: query, limit: 5 });
+        medicinesResponse.medicines.forEach((medicine) => {
+          results.push({
+            type: 'medicine',
+            id: medicine.id,
+            title: medicine.name,
+            subtitle: `${medicine.generic_name || 'Generic'} • ${medicine.quantity} in stock`,
+            icon: <Package className="h-4 w-4 text-primary" />,
+            data: medicine
+          });
+        });
+      } catch (error) {
+        console.error('Error searching medicines:', error);
+      }
+
+      // Search customers
+      try {
+        const customersResponse = await customersAPI.getAll({ search: query, limit: 5 });
+        customersResponse.customers.forEach((customer) => {
+          results.push({
+            type: 'customer',
+            id: customer.id,
+            title: customer.name,
+            subtitle: `${customer.email || 'No email'} • ${customer.phone || 'No phone'}`,
+            icon: <Users className="h-4 w-4 text-success" />,
+            data: customer
+          });
+        });
+      } catch (error) {
+        console.error('Error searching customers:', error);
+      }
+
+      // Search prescriptions
+      try {
+        const prescriptionsResponse = await prescriptionsAPI.getAll({ search: query, limit: 5 });
+        prescriptionsResponse.prescriptions.forEach((prescription) => {
+          results.push({
+            type: 'prescription',
+            id: prescription.id,
+            title: `Prescription #${prescription.prescription_number}`,
+            subtitle: `${prescription.customer.name} • ${prescription.status}`,
+            icon: <FileText className="h-4 w-4 text-warning" />,
+            data: prescription
+          });
+        });
+      } catch (error) {
+        console.error('Error searching prescriptions:', error);
+      }
+
+      // Search sales
+      try {
+        const salesResponse = await salesAPI.getAll({ search: query, limit: 5 });
+        salesResponse.sales.forEach((sale) => {
+          results.push({
+            type: 'sale',
+            id: sale.id,
+            title: `Sale #${sale.id.slice(0, 8)}`,
+            subtitle: `${sale.customer?.name || 'Walk-in'} • ${sale.payment_method} • UGX ${sale.total}`,
+            icon: <ShoppingCart className="h-4 w-4 text-success" />,
+            data: sale
+          });
+        });
+      } catch (error) {
+        console.error('Error searching sales:', error);
+      }
+
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to perform search. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        performSearch(searchQuery);
+      }, 300);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Handle search result selection
+  const handleSearchResultClick = (result: SearchResult) => {
+    setSearchQuery("");
+    setShowSearchResults(false);
+    
+    switch (result.type) {
+      case 'medicine':
+        navigate('/medicines');
+        break;
+      case 'customer':
+        navigate('/customers');
+        break;
+      case 'prescription':
+        navigate('/prescriptions');
+        break;
+      case 'sale':
+        navigate('/sales');
+        break;
+    }
+  };
+
+  // Handle search input focus/blur
+  const handleSearchFocus = () => {
+    if (searchResults.length > 0) {
+      setShowSearchResults(true);
+    }
+  };
+
+  const handleSearchBlur = () => {
+    // Delay hiding results to allow clicking on them
+    setTimeout(() => setShowSearchResults(false), 200);
+  };
+
+  // Handle keyboard navigation
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setSearchQuery("");
+      setShowSearchResults(false);
+      searchInputRef.current?.blur();
+    }
+  };
 
   const handleMarkAsRead = async (alertId: string) => {
     try {
@@ -113,20 +288,90 @@ export function Header({ user, onLogout }: HeaderProps) {
         <MobileMenu />
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">G</span>
+            <span className="text-primary-foreground font-bold text-sm">D</span>
           </div>
-          <span className="text-lg font-bold text-foreground">Green Leaf</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-foreground">PharmaFlow Sync</span>
+            <span className="text-xs text-muted-foreground">by Devzora Technologies</span>
+          </div>
         </div>
       </div>
 
-      {/* Desktop: Show search bar */}
-      <div className="hidden md:flex items-center gap-4 flex-1">
+      {/* Desktop: Show branding and search bar */}
+      <div className="hidden md:flex items-center gap-6 flex-1">
+        {/* Desktop Branding */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-lg">D</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xl font-bold text-foreground">PharmaFlow Sync</span>
+            <span className="text-xs text-muted-foreground">by Devzora Technologies</span>
+          </div>
+        </div>
+        
         <div className="relative w-96">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            ref={searchInputRef}
             placeholder="Search medicines, customers, prescriptions..."
             className="pl-10 bg-background/50 backdrop-blur-sm border-0 shadow-soft"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
+            onKeyDown={handleSearchKeyDown}
           />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+          
+          {/* Search Results Dropdown */}
+          {showSearchResults && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
+              {isSearching ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    Searching...
+                  </div>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <ScrollArea className="max-h-96">
+                  {searchResults.map((result, index) => (
+                    <div
+                      key={`${result.type}-${result.id}`}
+                      className="flex items-center gap-3 p-3 hover:bg-primary/5 cursor-pointer border-b border-border last:border-b-0"
+                      onClick={() => handleSearchResultClick(result)}
+                    >
+                      <div className="flex-shrink-0">
+                        {result.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">
+                          {result.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {result.subtitle}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </ScrollArea>
+              ) : searchQuery.trim() ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  No results found for "{searchQuery}"
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
 
@@ -342,7 +587,62 @@ export function Header({ user, onLogout }: HeaderProps) {
               placeholder="Search medicines, customers, prescriptions..."
               className="pl-10 bg-background/50 backdrop-blur-sm"
               autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              onKeyDown={handleSearchKeyDown}
             />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+            
+            {/* Mobile Search Results */}
+            {showSearchResults && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
+                {isSearching ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Searching...
+                    </div>
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <ScrollArea className="max-h-64">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={`${result.type}-${result.id}`}
+                        className="flex items-center gap-3 p-3 hover:bg-primary/5 cursor-pointer border-b border-border last:border-b-0"
+                        onClick={() => handleSearchResultClick(result)}
+                      >
+                        <div className="flex-shrink-0">
+                          {result.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">
+                            {result.title}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {result.subtitle}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                ) : searchQuery.trim() ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No results found for "{searchQuery}"
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
       )}

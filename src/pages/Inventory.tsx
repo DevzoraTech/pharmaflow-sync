@@ -321,77 +321,89 @@ export default function Inventory() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-6">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Items
             </CardTitle>
-            <Package className="h-4 w-4 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Package className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalItems}</div>
-            <p className="text-xs text-muted-foreground">Unique medicines</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">{stats.totalItems}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Unique medicines</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Low Stock
             </CardTitle>
-            <TrendingDown className="h-4 w-4 text-warning" />
+            <div className="p-2 bg-warning/10 rounded-lg">
+              <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.lowStockItems}</div>
-            <p className="text-xs text-muted-foreground">Need restocking</p>
+            <div className="text-xl md:text-3xl font-bold text-warning mb-2">{stats.lowStockItems}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Need restocking</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Expiring Soon
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.expiringSoon}</div>
-            <p className="text-xs text-muted-foreground">Next 30 days</p>
+            <div className="text-xl md:text-3xl font-bold text-destructive mb-2">{stats.expiringSoon}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Out of Stock
             </CardTitle>
-            <Package2 className="h-4 w-4 text-destructive" />
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <Package2 className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.outOfStock}</div>
-            <p className="text-xs text-muted-foreground">Items unavailable</p>
+            <div className="text-xl md:text-3xl font-bold text-destructive mb-2">{stats.outOfStock}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Items unavailable</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Categories
             </CardTitle>
-            <BarChart3 className="h-4 w-4 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <BarChart3 className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.categories}</div>
-            <p className="text-xs text-muted-foreground">Product categories</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">{stats.categories}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Product categories</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Value
             </CardTitle>
-            <BarChart3 className="h-4 w-4 text-success" />
+            <div className="p-2 bg-success/10 rounded-lg">
+              <BarChart3 className="h-4 w-4 md:h-5 md:w-5 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">UGX {stats.totalValue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Inventory worth</p>
+            <div className="text-xl md:text-3xl font-bold text-success mb-2">UGX {stats.totalValue.toLocaleString()}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Inventory worth</p>
           </CardContent>
         </Card>
       </div>

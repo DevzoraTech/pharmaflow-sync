@@ -528,7 +528,8 @@ export const prescriptionsAPI = {
       discount: saleData.discount || 0,
       total,
       payment_method: saleData.paymentMethod,
-      cashier_id: currentUser.id
+      cashier_id: currentUser.id,
+      sale_date: new Date().toISOString()
     }).select().single();
 
     if (saleError) throw saleError;
@@ -653,7 +654,8 @@ export const salesAPI = {
       total,
       payment_method: sale.paymentMethod,
       cashier_id: currentUser.id,
-      notes: sale.notes
+      notes: sale.notes,
+      sale_date: new Date().toISOString()
     }).select().single();
 
     if (saleError) throw saleError;
@@ -1039,32 +1041,38 @@ export const attendanceAPI = {
 export const dashboardAPI = {
   async getStats() {
     const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
     const [
       { data: medicines },
       { data: customers },
-      { data: todaySales },
+      { data: allSales },
       { data: alerts },
       { data: prescriptions }
     ] = await Promise.all([
       supabase.from('medicines').select('*').gt('quantity', 0),
       supabase.from('customers').select('*'),
-      supabase.from('sales').select('total').gte('sale_date', startOfDay).lte('sale_date', endOfDay),
+      supabase.from('sales').select('total, sale_date, created_at'),
       supabase.from('alerts').select('*').eq('is_read', false),
       supabase.from('prescriptions').select('*')
     ]);
 
+    // Filter sales for today using either sale_date or created_at
+    const todaySales = (allSales || []).filter(sale => {
+      const saleDate = sale.sale_date ? new Date(sale.sale_date) : new Date(sale.created_at);
+      return saleDate >= startOfDay && saleDate <= endOfDay;
+    });
+
     const medicineStats = medicinesAPI.calculateMedicineStats(medicines || []);
-    const totalRevenue = (todaySales || []).reduce((sum, sale) => sum + Number(sale.total), 0);
+    const totalRevenue = todaySales.reduce((sum, sale) => sum + Number(sale.total), 0);
     const pendingPrescriptions = (prescriptions || []).filter(p => p.status === 'PENDING').length;
 
     return {
       totalRevenue,
       totalMedicines: medicineStats.totalMedicines,
       totalCustomers: (customers || []).length,
-      totalSales: (todaySales || []).length,
+      totalSales: todaySales.length,
       lowStockItems: medicineStats.lowStockItems,
       expiringSoon: medicineStats.expiringSoon,
       unreadAlerts: (alerts || []).length,

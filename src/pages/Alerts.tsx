@@ -240,53 +240,61 @@ export default function Alerts() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Unread Alerts
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.unread}</div>
-            <p className="text-xs text-muted-foreground">Require attention</p>
+            <div className="text-xl md:text-3xl font-bold text-destructive mb-2">{stats.unread}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Require attention</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Stock Alerts
             </CardTitle>
-            <Package className="h-4 w-4 text-warning" />
+            <div className="p-2 bg-warning/10 rounded-lg">
+              <Package className="h-4 w-4 md:h-5 md:w-5 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.byType.STOCK}</div>
-            <p className="text-xs text-muted-foreground">Low/out of stock</p>
+            <div className="text-xl md:text-3xl font-bold text-warning mb-2">{stats.byType.STOCK}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Low/out of stock</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Expiry Alerts
             </CardTitle>
-            <Calendar className="h-4 w-4 text-destructive" />
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.byType.EXPIRY}</div>
-            <p className="text-xs text-muted-foreground">Expiring soon</p>
+            <div className="text-xl md:text-3xl font-bold text-destructive mb-2">{stats.byType.EXPIRY}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Expiring soon</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               System Alerts
             </CardTitle>
-            <Bell className="h-4 w-4 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Bell className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.byType.SYSTEM}</div>
-            <p className="text-xs text-muted-foreground">System notifications</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">{stats.byType.SYSTEM}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">System notifications</p>
           </CardContent>
         </Card>
       </div>

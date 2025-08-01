@@ -1,494 +1,394 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
   Shield, 
+  Mail, 
+  Phone, 
+  Globe, 
+  Users, 
+  Settings as SettingsIcon,
+  Info,
+  Heart,
+  Zap,
+  Code,
   Database,
+  Lock,
+  Bell,
   Palette,
+  Download,
+  Upload,
+  Trash2,
   Save,
-  Loader2,
-  CheckCircle,
-  AlertTriangle
+  RefreshCw
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-interface SettingsData {
-  // General Settings
-  pharmacyName: string;
-  address: string;
-  phone: string;
-  email: string;
-  
-  // User Profile
-  userName: string;
-  userEmail: string;
-  role: string;
-  
-  // Notifications
-  lowStockAlerts: boolean;
-  expiryAlerts: boolean;
-  emailNotifications: boolean;
-  smsNotifications: boolean;
-  
-  // Security
-  twoFactorAuth: boolean;
-  autoLogout: boolean;
-  sessionTimeout: number;
-  
-  // System Settings
-  currency: string;
-  timezone: string;
-  dateFormat: string;
-  automaticBackups: boolean;
-  
-  // Appearance
-  darkMode: boolean;
-  language: string;
-  itemsPerPage: number;
-}
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 export default function Settings() {
-  const [settings, setSettings] = useState<SettingsData>({
-    // General Settings
-    pharmacyName: "Green Leaf Pharmacy",
-    address: "123 Main Street, Kampala, Uganda",
-    phone: "+256 700 123 456",
-    email: "info@greenleaf.com",
-    
-    // User Profile
-    userName: "Admin User",
-    userEmail: "admin@greenleaf.com",
-    role: "ADMIN",
-    
-    // Notifications
-    lowStockAlerts: true,
-    expiryAlerts: true,
-    emailNotifications: false,
-    smsNotifications: false,
-    
-    // Security
-    twoFactorAuth: false,
-    autoLogout: true,
-    sessionTimeout: 30,
-    
-    // System Settings
-    currency: "UGX",
-    timezone: "Africa/Kampala",
-    dateFormat: "DD/MM/YYYY",
-    automaticBackups: true,
-    
-    // Appearance
-    darkMode: false,
-    language: "English",
-    itemsPerPage: 25
-  });
+  const [activeTab, setActiveTab] = useState("general");
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // Load settings on component mount
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Try to load settings from localStorage first (fallback)
-      const savedSettings = localStorage.getItem('pharmacy-settings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        setSettings(prev => ({ ...prev, ...parsed }));
-      }
-
-      // Update user profile from Supabase
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('name, email, role')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (userProfile) {
-        setSettings(prev => ({
-          ...prev,
-          userName: userProfile.name || prev.userName,
-          userEmail: userProfile.email || prev.userEmail,
-          role: userProfile.role || prev.role
-        }));
-      }
-
-    } catch (error) {
-      console.error('Error loading settings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const saveSettings = async () => {
-    try {
-      setIsSaving(true);
-      setMessage(null);
-
-      // Save to localStorage
-      localStorage.setItem('pharmacy-settings', JSON.stringify(settings));
-
-      // Try to update user profile in Supabase
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('users')
-          .update({
-            name: settings.userName,
-            email: settings.userEmail
-          })
-          .eq('auth_id', user.id);
-      }
-
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
-      
-      // Clear message after 3 seconds
-      setTimeout(() => setMessage(null), 3000);
-
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const updateSetting = (key: keyof SettingsData, value: unknown) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <Loader2 className="h-8 w-8 animate-spin mr-2" />
-        <span>Loading settings...</span>
-      </div>
-    );
-  }
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage your Green Leaf Pharmacy system preferences</p>
+        <p className="text-muted-foreground">Manage your pharmacy system preferences and view company information</p>
       </div>
 
-      {/* Success/Error Messages */}
-      {message && (
-        <Alert variant={message.type === 'error' ? 'destructive' : 'default'}>
-          {message.type === 'success' ? (
-            <CheckCircle className="h-4 w-4" />
-          ) : (
-            <AlertTriangle className="h-4 w-4" />
-          )}
-          <AlertDescription>{message.text}</AlertDescription>
-        </Alert>
-      )}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="company">Company</TabsTrigger>
+          <TabsTrigger value="support">Support</TabsTrigger>
+          <TabsTrigger value="system">System</TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-6 md:grid-cols-2">
         {/* General Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <SettingsIcon className="h-5 w-5" />
-              General Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pharmacyName">Pharmacy Name</Label>
-              <Input 
-                id="pharmacyName" 
-                value={settings.pharmacyName}
-                onChange={(e) => updateSetting('pharmacyName', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Input 
-                id="address" 
-                value={settings.address}
-                onChange={(e) => updateSetting('address', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input 
-                id="phone" 
-                value={settings.phone}
-                onChange={(e) => updateSetting('phone', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={settings.email}
-                onChange={(e) => updateSetting('email', e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="general" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Appearance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Theme</label>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      Light
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      Dark
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      Auto
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Language</label>
+                  <select className="w-full p-2 border rounded-md">
+                    <option>English</option>
+                    <option>French</option>
+                    <option>Spanish</option>
+                  </select>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* User Profile */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              User Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="userName">Full Name</Label>
-              <Input 
-                id="userName" 
-                value={settings.userName}
-                onChange={(e) => updateSetting('userName', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="userEmail">Email</Label>
-              <Input 
-                id="userEmail" 
-                type="email" 
-                value={settings.userEmail}
-                onChange={(e) => updateSetting('userEmail', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Input id="role" value={settings.role} disabled />
-            </div>
-            <Button variant="outline" className="w-full">
-              Change Password
-            </Button>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Alert Types</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Low Stock Alerts</span>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Expiry Alerts</span>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">System Notifications</span>
+                      <input type="checkbox" defaultChecked className="rounded" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Low Stock Alerts</Label>
-                <p className="text-sm text-muted-foreground">Get notified when items are low in stock</p>
-              </div>
-              <Switch 
-                checked={settings.lowStockAlerts}
-                onCheckedChange={(checked) => updateSetting('lowStockAlerts', checked)}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Expiry Alerts</Label>
-                <p className="text-sm text-muted-foreground">Get notified about expiring medicines</p>
-              </div>
-              <Switch 
-                checked={settings.expiryAlerts}
-                onCheckedChange={(checked) => updateSetting('expiryAlerts', checked)}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive notifications via email</p>
-              </div>
-              <Switch 
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => updateSetting('emailNotifications', checked)}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>SMS Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive notifications via SMS</p>
-              </div>
-              <Switch 
-                checked={settings.smsNotifications}
-                onCheckedChange={(checked) => updateSetting('smsNotifications', checked)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Company Information */}
+        <TabsContent value="company" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Devzora Technologies
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold text-xl">D</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Devzora Technologies</h3>
+                    <p className="text-sm text-muted-foreground">Leading provider of innovative pharmacy management solutions</p>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">devzoratech.com</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">support@devzoratech.com</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">devzoratech@gmail.com</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">+256 755 543 250</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Security */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Two-Factor Authentication</Label>
-                <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
-              </div>
-              <Switch 
-                checked={settings.twoFactorAuth}
-                onCheckedChange={(checked) => updateSetting('twoFactorAuth', checked)}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Auto Logout</Label>
-                <p className="text-sm text-muted-foreground">Automatically logout after inactivity</p>
-              </div>
-              <Switch 
-                checked={settings.autoLogout}
-                onCheckedChange={(checked) => updateSetting('autoLogout', checked)}
-              />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label htmlFor="sessionTimeout">Session Timeout (minutes)</Label>
-              <Input 
-                id="sessionTimeout" 
-                type="number" 
-                value={settings.sessionTimeout}
-                onChange={(e) => updateSetting('sessionTimeout', parseInt(e.target.value) || 30)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Info className="h-5 w-5" />
+                  About PharmaFlow Sync
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Version</span>
+                    <Badge variant="secondary">2.1.0</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Build Date</span>
+                    <span className="text-sm text-muted-foreground">December 2024</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">License</span>
+                    <Badge variant="outline">Enterprise</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Status</span>
+                    <Badge variant="success">Active</Badge>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Features</h4>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-3 w-3" />
+                      <span>Real-time inventory management</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3 w-3" />
+                      <span>Multi-user support</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Lock className="h-3 w-3" />
+                      <span>Enterprise-grade security</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Code className="h-3 w-3" />
+                      <span>Built with React & TypeScript</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-        {/* System Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              System Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="currency">Default Currency</Label>
-              <Input 
-                id="currency" 
-                value={settings.currency}
-                onChange={(e) => updateSetting('currency', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Timezone</Label>
-              <Input 
-                id="timezone" 
-                value={settings.timezone}
-                onChange={(e) => updateSetting('timezone', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dateFormat">Date Format</Label>
-              <Input 
-                id="dateFormat" 
-                value={settings.dateFormat}
-                onChange={(e) => updateSetting('dateFormat', e.target.value)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Automatic Backups</Label>
-                <p className="text-sm text-muted-foreground">Daily system backups</p>
-              </div>
-              <Switch 
-                checked={settings.automaticBackups}
-                onCheckedChange={(checked) => updateSetting('automaticBackups', checked)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Support Information */}
+        <TabsContent value="support" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Contact Support
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 bg-primary/5 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Technical Support</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">For technical issues and system problems</p>
+                    <a href="mailto:support@devzoratech.com" className="text-sm text-primary hover:underline">
+                      support@devzoratech.com
+                    </a>
+                  </div>
+                  
+                  <div className="p-3 bg-primary/5 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <span className="font-medium">General Inquiries</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">For business inquiries and partnerships</p>
+                    <a href="mailto:devzoratech@gmail.com" className="text-sm text-primary hover:underline">
+                      devzoratech@gmail.com
+                    </a>
+                  </div>
+                  
+                  <div className="p-3 bg-primary/5 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Phone className="h-4 w-4 text-primary" />
+                      <span className="font-medium">Phone Support</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Available during business hours</p>
+                    <a href="tel:+256755543250" className="text-sm text-primary hover:underline">
+                      +256 755 543 250
+                    </a>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Appearance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              Appearance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Dark Mode</Label>
-                <p className="text-sm text-muted-foreground">Switch to dark theme</p>
-              </div>
-              <Switch 
-                checked={settings.darkMode}
-                onCheckedChange={(checked) => updateSetting('darkMode', checked)}
-              />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label htmlFor="language">Language</Label>
-              <Input 
-                id="language" 
-                value={settings.language}
-                onChange={(e) => updateSetting('language', e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="itemsPerPage">Items Per Page</Label>
-              <Input 
-                id="itemsPerPage" 
-                type="number" 
-                value={settings.itemsPerPage}
-                onChange={(e) => updateSetting('itemsPerPage', parseInt(e.target.value) || 25)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Resources
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <a 
+                    href="https://devzoratech.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <div>
+                      <div className="font-medium">Company Website</div>
+                      <div className="text-sm text-muted-foreground">devzoratech.com</div>
+                    </div>
+                  </a>
+                  
+                  <div className="p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Heart className="h-4 w-4 text-red-500" />
+                      <span className="font-medium">Support Hours</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <div>Monday - Friday: 8:00 AM - 6:00 PM</div>
+                      <div>Saturday: 9:00 AM - 2:00 PM</div>
+                      <div>Sunday: Closed</div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-4 w-4 text-green-500" />
+                      <span className="font-medium">Response Time</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <div>Email: Within 24 hours</div>
+                      <div>Phone: Within 2 hours</div>
+                      <div>Emergency: Within 1 hour</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button 
-          className="gap-2" 
-          onClick={saveSettings}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Save Settings
-            </>
-          )}
-        </Button>
-      </div>
+        {/* System Information */}
+        <TabsContent value="system" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  System Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Database</span>
+                    <Badge variant="outline">PostgreSQL</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Backend</span>
+                    <Badge variant="outline">Supabase</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Frontend</span>
+                    <Badge variant="outline">React 18</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Language</span>
+                    <Badge variant="outline">TypeScript</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">UI Framework</span>
+                    <Badge variant="outline">Shadcn/ui</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Styling</span>
+                    <Badge variant="outline">Tailwind CSS</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <SettingsIcon className="h-5 w-5" />
+                  System Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import Data
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh Cache
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Save className="h-4 w-4 mr-2" />
+                    Backup Database
+                  </Button>
+                  <Separator />
+                  <Button variant="destructive" className="w-full justify-start">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear Cache
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

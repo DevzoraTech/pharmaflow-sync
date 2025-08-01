@@ -179,16 +179,26 @@ export default function Prescriptions() {
       }).length || 0;
       
       // Calculate actual revenue from filled prescriptions today
-      const todayRevenue = response.prescriptions?.filter((p: PrescriptionWithDetails) => {
+      const filledTodayPrescriptions = response.prescriptions?.filter((p: PrescriptionWithDetails) => {
         if (p.status !== 'FILLED') return false;
         const updateDate = p.updated_at || p.created_at;
         if (!updateDate) return false;
         const prescriptionDate = new Date(updateDate).toISOString().split('T')[0];
         return prescriptionDate === today;
-      }).reduce((sum, p) => {
-        // Calculate total from prescription items
-        return sum + calculatePrescriptionTotal(p);
-      }, 0) || 0;
+      }) || [];
+      
+      console.log('Filled today prescriptions:', filledTodayPrescriptions.map(p => ({
+        id: p.id,
+        status: p.status,
+        items: p.prescription_items?.length,
+        total: calculatePrescriptionTotal(p)
+      })));
+      
+      const todayRevenue = filledTodayPrescriptions.reduce((sum, p) => {
+        const prescriptionTotal = calculatePrescriptionTotal(p);
+        console.log(`Prescription ${p.id} total:`, prescriptionTotal);
+        return sum + prescriptionTotal;
+      }, 0);
       
       console.log('Prescription stats calculated:', {
         pending,
@@ -386,7 +396,15 @@ export default function Prescriptions() {
   };
 
   const calculatePrescriptionTotal = (prescription: PrescriptionWithDetails) => {
+    if (!prescription.prescription_items || prescription.prescription_items.length === 0) {
+      return 0;
+    }
+    
     return prescription.prescription_items.reduce((total, item) => {
+      if (!item.medicine || !item.medicine.price) {
+        console.warn('Missing medicine or price for prescription item:', item);
+        return total;
+      }
       return total + (item.quantity * item.medicine.price);
     }, 0);
   };
@@ -591,41 +609,47 @@ export default function Prescriptions() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Pending Prescriptions
             </CardTitle>
-            <Clock className="h-4 w-4 text-warning" />
+            <div className="p-2 bg-warning/10 rounded-lg">
+              <Clock className="h-4 w-4 md:h-5 md:w-5 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.pending}</div>
-            <p className="text-xs text-muted-foreground">Awaiting fulfillment</p>
+            <div className="text-xl md:text-3xl font-bold text-warning">{stats.pending || 0}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Awaiting fulfillment</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Filled Today
             </CardTitle>
-            <CheckCircle className="h-4 w-4 text-success" />
+            <div className="p-2 bg-success/10 rounded-lg">
+              <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{stats.filledToday}</div>
-            <p className="text-xs text-muted-foreground">Completed prescriptions</p>
+            <div className="text-xl md:text-3xl font-bold text-success">{stats.filledToday || 0}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Completed prescriptions</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Revenue
             </CardTitle>
-            <FileText className="h-4 w-4 text-primary" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <FileText className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">UGX {stats.totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">From prescriptions today</p>
+            <div className="text-xl md:text-3xl font-bold">UGX {(stats.totalRevenue || 0).toLocaleString()}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">From prescriptions today</p>
           </CardContent>
         </Card>
       </div>

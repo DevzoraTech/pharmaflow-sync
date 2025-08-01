@@ -312,80 +312,88 @@ export default function Reports() {
       {/* Reports Tabs */}
       {!isLoading && (
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="sales">Sales</TabsTrigger>
-            <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
-            <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1">
+            <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
+            <TabsTrigger value="sales" className="text-xs md:text-sm">Sales</TabsTrigger>
+            <TabsTrigger value="inventory" className="text-xs md:text-sm">Inventory</TabsTrigger>
+            <TabsTrigger value="customers" className="text-xs md:text-sm">Customers</TabsTrigger>
+            <TabsTrigger value="prescriptions" className="text-xs md:text-sm">Prescriptions</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card>
+            <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+              <Card className="hover:scale-105 transition-transform duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                     Total Revenue
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-success" />
+                  <div className="p-2 bg-success/10 rounded-lg">
+                    <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-success" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-success">
+                  <div className="text-xl md:text-3xl font-bold text-success">
                     {salesReport ? formatCurrency(salesReport.totalSales) : 'UGX 0'}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {salesReport?.totalTransactions || 0} transactions
                   </p>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                     Inventory Value
                   </CardTitle>
-                  <Package className="h-4 w-4 text-primary" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Package className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-3xl font-bold">
                     {inventoryReport ? formatCurrency(inventoryReport.totalValue) : 'UGX 0'}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {inventoryReport?.totalMedicines || 0} medicines
                   </p>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                     Total Customers
                   </CardTitle>
-                  <Users className="h-4 w-4 text-primary" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Users className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-3xl font-bold">
                     {customerReport?.totalCustomers || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {customerReport?.newCustomers || 0} new this month
                   </p>
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                     Prescriptions
                   </CardTitle>
-                  <Activity className="h-4 w-4 text-primary" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Activity className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-3xl font-bold">
                     {prescriptionReport?.totalPrescriptions || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {prescriptionReport?.pendingPrescriptions || 0} pending
                   </p>
                 </CardContent>

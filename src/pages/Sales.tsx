@@ -208,7 +208,8 @@ export default function Sales() {
     const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount), 0);
     const tax = subtotal * 0.1; // 10% tax
     const discount = saleForm.discount;
-    return subtotal + tax - discount;
+    const total = subtotal + tax - discount;
+    return { subtotal, tax, total };
   };
 
   const handleCreateSale = async () => {
@@ -415,7 +416,7 @@ export default function Sales() {
 
                 <div className="space-y-2">
                   <Label>Payment Method</Label>
-                  <Select value={saleForm.paymentMethod} onValueChange={(value: any) => setSaleForm({...saleForm, paymentMethod: value})}>
+                  <Select value={saleForm.paymentMethod} onValueChange={(value: 'CASH' | 'CARD' | 'INSURANCE' | 'CREDIT') => setSaleForm({...saleForm, paymentMethod: value})}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -537,41 +538,47 @@ export default function Sales() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Today's Sales
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">UGX {stats.todaysSales.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">{stats.transactions} transactions</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">UGX {stats.todaysSales.toLocaleString()}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">{stats.transactions} transactions</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Average Sale
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">UGX {stats.averageSale.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Per transaction</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">UGX {stats.averageSale.toLocaleString()}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Per transaction</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Sales
             </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <ShoppingCart className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sales.length}</div>
-            <p className="text-xs text-muted-foreground">All time</p>
+            <div className="text-xl md:text-3xl font-bold text-foreground mb-2">{sales.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">All time</p>
           </CardContent>
         </Card>
       </div>
