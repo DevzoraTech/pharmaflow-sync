@@ -231,3 +231,70 @@ All colors MUST be HSL.
     @apply my-4 md:my-6;
   }
 }
+
+/* Receipt Print Styles */
+@media print {
+  body { 
+    margin: 0; 
+    background: white !important;
+  }
+  
+  .receipt-container { 
+    width: 80mm !important; 
+    max-width: none !important; 
+    margin: 0 !important; 
+    padding: 10px !important;
+    font-family: 'Courier New', monospace !important;
+    font-size: 12px !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  .no-print { 
+    display: none !important; 
+  }
+  
+  .receipt-header { 
+    text-align: center !important; 
+    margin-bottom: 15px !important; 
+  }
+  
+  .receipt-title { 
+    font-size: 16px !important; 
+    font-weight: bold !important; 
+    margin-bottom: 5px !important; 
+  }
+  
+  .receipt-subtitle { 
+    font-size: 12px !important; 
+    margin-bottom: 10px !important; 
+  }
+  
+  .receipt-divider { 
+    border-top: 1px dashed #000 !important; 
+    margin: 10px 0 !important; 
+  }
+  
+  .receipt-item { 
+    display: flex !important; 
+    justify-content: space-between !important; 
+    margin: 3px 0 !important; 
+  }
+  
+  .receipt-total { 
+    font-weight: bold !important; 
+    border-top: 1px solid #000 !important; 
+    padding-top: 5px !important; 
+  }
+  
+  .receipt-footer { 
+    text-align: center !important; 
+    margin-top: 15px !important; 
+    font-size: 10px !important; 
+  }
+  
+  /* Hide all other elements when printing receipt */
+  body > *:not(.receipt-container) {
+    display: none !important;
+  }
+}

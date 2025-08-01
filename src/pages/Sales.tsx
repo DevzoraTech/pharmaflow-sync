@@ -58,6 +58,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { salesAPI, customersAPI, medicinesAPI, type SaleWithDetails, type Customer, type Medicine } from "@/lib/api";
+import { PrintReceiptDialog } from "@/components/receipt/PrintReceiptDialog";
 
 // TypeScript interfaces
 interface CartItem {
@@ -100,6 +101,7 @@ export default function Sales() {
   // Additional states
   const [selectedSale, setSelectedSale] = useState<SaleWithDetails | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
 
   // Stats
   const [stats, setStats] = useState({
@@ -203,41 +205,47 @@ export default function Sales() {
   };
 
   const calculateCartTotal = () => {
-    const subtotal = cart.reduce((total, item) => {
-      return total + (item.quantity * item.unitPrice) - item.discount;
-    }, 0);
+    const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount), 0);
     const tax = subtotal * 0.1; // 10% tax
-    const total = subtotal + tax - saleForm.discount;
-    return { subtotal, tax, total };
+    const discount = saleForm.discount;
+    return subtotal + tax - discount;
   };
 
   const handleCreateSale = async () => {
+    if (cart.length === 0) {
+      setError("Please add items to cart before creating a sale");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setError("");
 
-      if (cart.length === 0) {
-        setError("Please add items to cart");
-        return;
-      }
+      const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount), 0);
+      const tax = subtotal * 0.1;
+      const total = subtotal + tax - saleForm.discount;
 
-      // Prepare sale data
       const saleData = {
         customerId: saleForm.customerId || null,
+        prescriptionId: null, // Could be added later
+        subtotal,
+        tax,
+        discount: saleForm.discount,
+        total,
+        paymentMethod: saleForm.paymentMethod,
+        notes: saleForm.notes || null,
         items: cart.map(item => ({
           medicineId: item.medicineId,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          subtotal: item.quantity * item.unitPrice - item.discount,
           discount: item.discount
-        })),
-        paymentMethod: saleForm.paymentMethod,
-        discount: saleForm.discount,
-        notes: saleForm.notes || null
+        }))
       };
 
-      await salesAPI.create(saleData);
+      const newSale = await salesAPI.create(saleData);
       
-      // Reset form and cart
+      // Reset form and close dialog
       setCart([]);
       setSaleForm({
         customerId: "",
@@ -249,6 +257,10 @@ export default function Sales() {
       
       // Refresh sales list
       await fetchSales();
+      
+      // Open print dialog for the new sale
+      setSelectedSale(newSale);
+      setIsPrintDialogOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create sale');
     } finally {
@@ -261,15 +273,24 @@ export default function Sales() {
     setIsViewDialogOpen(true);
   };
 
+  const handlePrintReceipt = (sale: SaleWithDetails) => {
+    setSelectedSale(sale);
+    setIsPrintDialogOpen(true);
+  };
+
   const getPaymentMethodBadge = (method: string) => {
-    const variants = {
-      CASH: "success",
-      CARD: "default",
-      INSURANCE: "secondary",
-      CREDIT: "warning"
-    } as const;
-    
-    return <Badge variant={variants[method as keyof typeof variants] || "outline"}>{method}</Badge>;
+    switch (method) {
+      case 'CASH':
+        return <Badge variant="default">Cash</Badge>;
+      case 'CARD':
+        return <Badge variant="secondary">Card</Badge>;
+      case 'INSURANCE':
+        return <Badge variant="outline">Insurance</Badge>;
+      case 'CREDIT':
+        return <Badge variant="destructive">Credit</Badge>;
+      default:
+        return <Badge variant="outline">{method}</Badge>;
+    }
   };
 
   const filteredMedicines = medicines.filter(medicine =>
@@ -307,31 +328,32 @@ export default function Sales() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Sales Management</h1>
-          <p className="text-muted-foreground">Track and manage pharmacy sales</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Sales Management</h1>
+          <p className="text-muted-foreground">Manage sales transactions and point of sale operations</p>
         </div>
         <Dialog open={isPOSDialogOpen} onOpenChange={setIsPOSDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               New Sale
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Point of Sale System</DialogTitle>
+              <DialogTitle>Point of Sale</DialogTitle>
               <DialogDescription>
-                Add medicines to cart and process the sale.
+                Create a new sale transaction. Add items to cart and process payment.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-6 py-4">
-              {/* Left Side - Medicine Selection */}
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Side - Product Selection */}
               <div className="space-y-4">
-                <div>
-                  <Label className="text-base font-medium">Select Medicines</Label>
-                  <div className="relative mt-2">
+                <div className="space-y-2">
+                  <Label>Search Medicines</Label>
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Search medicines..."
@@ -342,171 +364,174 @@ export default function Sales() {
                   </div>
                 </div>
                 
-                <div className="max-h-96 overflow-y-auto border rounded-lg">
-                  {filteredMedicines.map((medicine) => (
-                    <div key={medicine.id} className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/50">
-                      <div className="flex-1">
-                        <div className="font-medium">{medicine.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {medicine.generic_name && `${medicine.generic_name} • `}
-                          UGX {medicine.price.toLocaleString()} • Stock: {medicine.quantity}
+                <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <h3 className="font-medium mb-3">Available Medicines</h3>
+                  <div className="space-y-2">
+                    {medicines
+                      .filter(medicine => 
+                        medicine.name.toLowerCase().includes(medicineSearch.toLowerCase()) ||
+                        (medicine.generic_name && medicine.generic_name.toLowerCase().includes(medicineSearch.toLowerCase()))
+                      )
+                      .map(medicine => (
+                        <div
+                          key={medicine.id}
+                          className="flex items-center justify-between p-2 border rounded hover:bg-muted cursor-pointer"
+                          onClick={() => addToCart(medicine)}
+                        >
+                          <div>
+                            <div className="font-medium">{medicine.name}</div>
+                            {medicine.generic_name && (
+                              <div className="text-sm text-muted-foreground">{medicine.generic_name}</div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium">UGX {medicine.price.toLocaleString()}</div>
+                            <div className="text-sm text-muted-foreground">Stock: {medicine.quantity}</div>
+                          </div>
                         </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => addToCart(medicine)}
-                        disabled={medicine.quantity === 0}
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  ))}
+                      ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Right Side - Cart and Checkout */}
+              {/* Right Side - Cart and Payment */}
               <div className="space-y-4">
-                <div>
-                  <Label className="text-base font-medium">Shopping Cart</Label>
-                  <div className="mt-2 border rounded-lg">
-                    {cart.length === 0 ? (
-                      <div className="p-8 text-center text-muted-foreground">
-                        Cart is empty. Add medicines to get started.
-                      </div>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto">
-                        {cart.map((item) => (
-                          <div key={item.medicineId} className="flex items-center gap-3 p-3 border-b last:border-b-0">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm">{item.medicine.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                UGX {item.unitPrice.toLocaleString()} each
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateCartItem(item.medicineId, 'quantity', Math.max(1, item.quantity - 1))}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-8 text-center text-sm">{item.quantity}</span>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => updateCartItem(item.medicineId, 'quantity', Math.min(item.medicine.quantity, item.quantity + 1))}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeFromCart(item.medicineId)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
+                <div className="space-y-2">
+                  <Label>Customer</Label>
+                  <Select value={saleForm.customerId} onValueChange={(value) => setSaleForm({...saleForm, customerId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select customer (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Walk-in Customer</SelectItem>
+                      {customers.map(customer => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Payment Method</Label>
+                  <Select value={saleForm.paymentMethod} onValueChange={(value: any) => setSaleForm({...saleForm, paymentMethod: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CASH">Cash</SelectItem>
+                      <SelectItem value="CARD">Card</SelectItem>
+                      <SelectItem value="INSURANCE">Insurance</SelectItem>
+                      <SelectItem value="CREDIT">Credit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Discount (UGX)</Label>
+                  <Input
+                    type="number"
+                    value={saleForm.discount}
+                    onChange={(e) => setSaleForm({...saleForm, discount: parseFloat(e.target.value) || 0})}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  <Textarea
+                    value={saleForm.notes}
+                    onChange={(e) => setSaleForm({...saleForm, notes: e.target.value})}
+                    placeholder="Additional notes..."
+                  />
+                </div>
+
+                {/* Cart */}
+                <div className="border rounded-lg p-4">
+                  <h3 className="font-medium mb-3">Cart Items</h3>
+                  {cart.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">No items in cart</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {cart.map(item => (
+                        <div key={item.medicineId} className="flex items-center justify-between p-2 border rounded">
+                          <div className="flex-1">
+                            <div className="font-medium">{item.medicine.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              UGX {item.unitPrice.toLocaleString()} x {item.quantity}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateCartItem(item.medicineId, 'quantity', Math.max(1, item.quantity - 1))}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateCartItem(item.medicineId, 'quantity', item.quantity + 1)}
+                              disabled={item.quantity >= item.medicine.quantity}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromCart(item.medicineId)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Sale Details */}
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Customer (Optional)</Label>
-                      <Select value={saleForm.customerId} onValueChange={(value) => setSaleForm({...saleForm, customerId: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Walk-in customer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="walk-in">Walk-in customer</SelectItem>
-                          {customers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.name} {customer.email && `(${customer.email})`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Payment Method</Label>
-                      <Select value={saleForm.paymentMethod} onValueChange={(value) => setSaleForm({...saleForm, paymentMethod: value as 'CASH' | 'CARD' | 'INSURANCE' | 'CREDIT'})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="CASH">Cash</SelectItem>
-                          <SelectItem value="CARD">Card</SelectItem>
-                          <SelectItem value="INSURANCE">Insurance</SelectItem>
-                          <SelectItem value="CREDIT">Credit</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Discount (UGX)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={saleForm.discount}
-                      onChange={(e) => setSaleForm({...saleForm, discount: parseFloat(e.target.value) || 0})}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Notes</Label>
-                    <Textarea
-                      value={saleForm.notes}
-                      onChange={(e) => setSaleForm({...saleForm, notes: e.target.value})}
-                      placeholder="Additional notes..."
-                      rows={2}
-                    />
-                  </div>
-                </div>
-
-                {/* Total Summary */}
+                {/* Totals */}
                 <div className="bg-muted p-4 rounded-lg space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>UGX {subtotal.toLocaleString()}</span>
+                    <span>UGX {cart.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount), 0).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span>Tax (10%):</span>
-                    <span>UGX {tax.toLocaleString()}</span>
+                    <span>UGX {(cart.reduce((sum, item) => sum + (item.quantity * item.unitPrice - item.discount), 0) * 0.1).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between">
                     <span>Discount:</span>
                     <span>-UGX {saleForm.discount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-medium text-lg border-t pt-2">
                     <span>Total:</span>
-                    <span>UGX {total.toLocaleString()}</span>
+                    <span>UGX {calculateCartTotal().toLocaleString()}</span>
                   </div>
                 </div>
+
+                <Button 
+                  onClick={handleCreateSale} 
+                  disabled={isSubmitting || cart.length === 0}
+                  className="w-full"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Complete Sale
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsPOSDialogOpen(false)} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateSale} disabled={isSubmitting || cart.length === 0}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  'Complete Sale'
-                )}
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
@@ -518,23 +543,11 @@ export default function Sales() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Today's Sales
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-success" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">UGX {stats.todaysSales.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Total revenue today</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Transactions
-            </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.transactions}</div>
-            <p className="text-xs text-muted-foreground">Sales completed today</p>
+            <div className="text-2xl font-bold">UGX {stats.todaysSales.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">{stats.transactions} transactions</p>
           </CardContent>
         </Card>
         <Card>
@@ -542,19 +555,31 @@ export default function Sales() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Average Sale
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">UGX {stats.averageSale.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Sales
+            </CardTitle>
+            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sales.length}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex gap-4">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -565,7 +590,7 @@ export default function Sales() {
               />
             </div>
             <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Payment method" />
               </SelectTrigger>
               <SelectContent>
@@ -580,7 +605,7 @@ export default function Sales() {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-48"
+              className="w-full sm:w-48"
             />
           </div>
         </CardContent>
@@ -597,7 +622,7 @@ export default function Sales() {
       {/* Sales Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Sales</CardTitle>
+          <CardTitle>Sales History</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -606,102 +631,90 @@ export default function Sales() {
               Loading sales...
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sale ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Cashier</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sales.length === 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {error ? 'Failed to load sales' : 'No sales found matching your criteria.'}
-                    </TableCell>
+                    <TableHead>Sale ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden sm:table-cell">Customer</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead className="hidden md:table-cell">Payment</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ) : (
-                  sales.map((sale: SaleWithDetails) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          #{sale.id.substring(0, 8)}
-                        </div>
-                        {sale.prescription && (
-                          <div className="text-xs text-muted-foreground">
-                            Rx: {sale.prescription.prescription_number}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {sale.customer ? (
-                          <div>
-                            <div className="font-medium">{sale.customer.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {sale.customer.email || sale.customer.phone || 'No contact'}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">Walk-in</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          {new Date(sale.sale_date).toLocaleDateString()}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(sale.sale_date).toLocaleTimeString()}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{sale.sale_items.length}</span> items
-                      </TableCell>
-                      <TableCell>
-                        {getPaymentMethodBadge(sale.payment_method)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">UGX {sale.total.toLocaleString()}</div>
-                        {sale.discount > 0 && (
-                          <div className="text-xs text-muted-foreground">
-                            Discount: UGX {sale.discount.toLocaleString()}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">{sale.cashier.name}</div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleViewSale(sale)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Receipt className="mr-2 h-4 w-4" />
-                              Print Receipt
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {sales.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        {error ? 'Failed to load sales' : 'No sales found matching your search criteria.'}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    sales.map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell className="font-mono text-sm">
+                          {sale.id.substring(0, 8).toUpperCase()}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{new Date(sale.sale_date).toLocaleDateString()}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {new Date(sale.sale_date).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {sale.customer ? (
+                            <div>
+                              <div className="font-medium">{sale.customer.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {sale.customer.email || sale.customer.phone || 'No contact'}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Walk-in</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {sale.sale_items.length} item{sale.sale_items.length !== 1 ? 's' : ''}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {getPaymentMethodBadge(sale.payment_method)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">UGX {sale.total.toLocaleString()}</div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => handleViewSale(sale)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePrintReceipt(sale)}>
+                                <Receipt className="mr-2 h-4 w-4" />
+                                Print Receipt
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -718,7 +731,7 @@ export default function Sales() {
           {selectedSale && (
             <div className="grid gap-6 py-4">
               {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Sale ID</Label>
                   <p className="text-sm font-mono">{selectedSale.id}</p>
@@ -732,7 +745,7 @@ export default function Sales() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Customer</Label>
                   {selectedSale.customer ? (
@@ -802,7 +815,7 @@ export default function Sales() {
               </div>
 
               {/* Payment Summary */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Payment Method</Label>
                   {getPaymentMethodBadge(selectedSale.payment_method)}
@@ -840,13 +853,23 @@ export default function Sales() {
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
               Close
             </Button>
-            <Button>
+            <Button onClick={() => {
+              setIsViewDialogOpen(false);
+              setIsPrintDialogOpen(true);
+            }}>
               <Receipt className="mr-2 h-4 w-4" />
               Print Receipt
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Print Receipt Dialog */}
+      <PrintReceiptDialog
+        sale={selectedSale}
+        isOpen={isPrintDialogOpen}
+        onClose={() => setIsPrintDialogOpen(false)}
+      />
     </div>
   );
 }
