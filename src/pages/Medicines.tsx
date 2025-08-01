@@ -517,41 +517,61 @@ export default function Medicines() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Total Medicines
             </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Package className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMedicines}</div>
-            <p className="text-xs text-muted-foreground">Across all categories</p>
+            <div className="text-xl md:text-3xl font-bold">{stats.totalMedicines}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Across all categories</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Low Stock Items
             </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-warning" />
+            <div className="p-2 bg-warning/10 rounded-lg">
+              <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.lowStockItems}</div>
-            <p className="text-xs text-muted-foreground">Need restocking</p>
+            <div className="text-xl md:text-3xl font-bold text-warning">{stats.lowStockItems}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Need restocking</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               Expiring Soon
             </CardTitle>
-            <Calendar className="h-4 w-4 text-destructive" />
+            <div className="p-2 bg-destructive/10 rounded-lg">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.expiringSoon}</div>
-            <p className="text-xs text-muted-foreground">Next 30 days</p>
+            <div className="text-xl md:text-3xl font-bold text-destructive">{stats.expiringSoon}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Next 30 days</p>
+          </CardContent>
+        </Card>
+        <Card className="hover:scale-105 transition-transform duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+              Total Value
+            </CardTitle>
+            <div className="p-2 bg-success/10 rounded-lg">
+              <Package className="h-4 w-4 md:h-5 md:w-5 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl md:text-3xl font-bold">UGX {stats.totalValue.toLocaleString()}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Inventory value</p>
           </CardContent>
         </Card>
       </div>
