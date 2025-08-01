@@ -591,40 +591,40 @@ export default function Prescriptions() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Pending Prescriptions
             </CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-warning">{stats.pending}</div>
+            <div className="text-2xl font-bold text-warning">{stats.pending}</div>
             <p className="text-xs text-muted-foreground">Awaiting fulfillment</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Filled Today
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-success">{stats.filledToday}</div>
+            <div className="text-2xl font-bold text-success">{stats.filledToday}</div>
             <p className="text-xs text-muted-foreground">Completed prescriptions</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Revenue
             </CardTitle>
             <FileText className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">UGX {stats.totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">UGX {stats.totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">From prescriptions today</p>
           </CardContent>
         </Card>
@@ -633,7 +633,7 @@ export default function Prescriptions() {
       {/* Search and Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -644,7 +644,7 @@ export default function Prescriptions() {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -679,8 +679,7 @@ export default function Prescriptions() {
               Loading prescriptions...
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Prescription</TableHead>
@@ -692,10 +691,10 @@ export default function Prescriptions() {
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
-                    <TableHead className="hidden sm:table-cell">Customer</TableHead>
-                    <TableHead className="hidden md:table-cell">Doctor</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="hidden sm:table-cell">Items</TableHead>
+              </TableHeader>
+              <TableBody>
+                {prescriptions.length === 0 ? (
+                  <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       {error ? 'Failed to load prescriptions' : 'No prescriptions found matching your search criteria.'}
                     </TableCell>
@@ -709,18 +708,9 @@ export default function Prescriptions() {
                           <div className="text-sm text-muted-foreground">
                             ID: {prescription.id.substring(0, 8)}...
                           </div>
-                            {/* Show customer and doctor on mobile */}
-                            <div className="sm:hidden mt-1 space-y-1">
-                              <div className="text-xs text-muted-foreground">
-                                Customer: {prescription.customer.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                Dr. {prescription.doctor_name}
-                              </div>
-                            </div>
                         </div>
                       </TableCell>
-                        <TableCell className="hidden sm:table-cell">
+                      <TableCell>
                         <div>
                           <div className="font-medium">{prescription.customer.name}</div>
                           <div className="text-sm text-muted-foreground">
@@ -728,13 +718,13 @@ export default function Prescriptions() {
                           </div>
                         </div>
                       </TableCell>
-                        <TableCell className="hidden md:table-cell">{prescription.doctor_name}</TableCell>
-                        <TableCell className="hidden md:table-cell">
+                      <TableCell>{prescription.doctor_name}</TableCell>
+                      <TableCell>
                         <div className="text-sm">
                           {new Date(prescription.issue_date).toLocaleDateString()}
                         </div>
                       </TableCell>
-                        <TableCell className="hidden sm:table-cell">
+                      <TableCell>
                         <div className="text-sm">
                           <span className="font-medium">{prescription._count.items}</span> items
                         </div>
@@ -782,8 +772,7 @@ export default function Prescriptions() {
                   ))
                 )}
               </TableBody>
-              </Table>
-            </div>
+            </Table>
           )}
         </CardContent>
       </Card>
