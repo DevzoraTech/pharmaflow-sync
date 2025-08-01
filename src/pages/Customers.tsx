@@ -363,40 +363,40 @@ export default function Customers() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Customers
             </CardTitle>
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalCustomers}</div>
             <p className="text-xs text-muted-foreground">Registered customers</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               New This Month
             </CardTitle>
             <UserPlus className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{stats.newThisMonth}</div>
+            <div className="text-xl sm:text-2xl font-bold text-success">{stats.newThisMonth}</div>
             <p className="text-xs text-muted-foreground">New registrations</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Active Today
             </CardTitle>
             <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeToday}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.activeToday}</div>
             <p className="text-xs text-muted-foreground">Customers served today</p>
           </CardContent>
         </Card>
@@ -437,7 +437,8 @@ export default function Customers() {
               Loading customers...
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
@@ -449,10 +450,10 @@ export default function Customers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {error ? 'Failed to load customers' : 'No customers found matching your search criteria.'}
+                    <TableHead className="hidden sm:table-cell">Contact</TableHead>
+                    <TableHead className="hidden md:table-cell">Address</TableHead>
+                    <TableHead className="hidden lg:table-cell">Activity</TableHead>
+                    <TableHead className="hidden md:table-cell">Allergies</TableHead>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -508,9 +509,24 @@ export default function Customers() {
                               <span className="font-medium">{customer._count?.sales || 0}</span> purchases
                             </div>
                           </div>
+                              {/* Show contact info on mobile */}
+                              <div className="sm:hidden mt-1 space-y-1">
+                                {customer.email && (
+                                  <div className="flex items-center text-xs text-muted-foreground">
+                                    <Mail className="w-3 h-3 mr-1" />
+                                    {customer.email}
+                          <TableCell className="hidden lg:table-cell">
+                                )}
+                                {customer.phone && (
+                                  <div className="flex items-center text-xs text-muted-foreground">
+                                    <Phone className="w-3 h-3 mr-1" />
+                                    {customer.phone}
+                                  </div>
+                                )}
+                              </div>
                         </TableCell>
-                        <TableCell>
-                          {customer.allergies && customer.allergies.length > 0 ? (
+                          <TableCell className="hidden md:table-cell">
+                          <TableCell className="hidden sm:table-cell">
                             <div className="space-y-1">
                               {customer.allergies.slice(0, 2).map((allergy, index) => (
                                 <Badge key={index} variant="destructive" className="text-xs mr-1">
@@ -524,7 +540,7 @@ export default function Customers() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground">None</span>
+                          <TableCell className="hidden md:table-cell">
                           )}
                         </TableCell>
                         <TableCell>
@@ -561,7 +577,8 @@ export default function Customers() {
                   })
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

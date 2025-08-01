@@ -512,40 +512,40 @@ export default function Sales() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Today's Sales
             </CardTitle>
             <DollarSign className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">UGX {stats.todaysSales.toLocaleString()}</div>
+            <div className="text-xl sm:text-2xl font-bold text-success">UGX {stats.todaysSales.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Total revenue today</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Transactions
             </CardTitle>
             <ShoppingCart className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.transactions}</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.transactions}</div>
             <p className="text-xs text-muted-foreground">Sales completed today</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Average Sale
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">UGX {stats.averageSale.toLocaleString()}</div>
+            <div className="text-xl sm:text-2xl font-bold">UGX {stats.averageSale.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
         </Card>
@@ -554,7 +554,7 @@ export default function Sales() {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -565,7 +565,7 @@ export default function Sales() {
               />
             </div>
             <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Payment method" />
               </SelectTrigger>
               <SelectContent>
@@ -580,7 +580,7 @@ export default function Sales() {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-48"
+              className="w-full sm:w-48"
             />
           </div>
         </CardContent>
@@ -606,7 +606,8 @@ export default function Sales() {
               Loading sales...
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Sale ID</TableHead>
@@ -618,12 +619,12 @@ export default function Sales() {
                   <TableHead>Cashier</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sales.length === 0 ? (
+                    <TableHead className="hidden sm:table-cell">Customer</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="hidden sm:table-cell">Items</TableHead>
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {error ? 'Failed to load sales' : 'No sales found matching your criteria.'}
+                    <TableHead className="hidden lg:table-cell">Cashier</TableHead>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -776,8 +777,18 @@ export default function Sales() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
+                          {/* Show customer on mobile */}
+                        <TableCell className="hidden md:table-cell">
+                            {sale.customer ? (
+                              <div className="text-xs text-muted-foreground">
+                                {sale.customer.name}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Walk-in</span>
+                            )}
+                        <TableCell className="hidden sm:table-cell">
                       {selectedSale.sale_items.map((item, index) => (
-                        <TableRow key={`${item.medicine_id}-${index}`}>
+                        <TableCell className="hidden sm:table-cell">
                           <TableCell>
                             <div>
                               <div className="font-medium">{item.medicine.name}</div>
@@ -806,7 +817,7 @@ export default function Sales() {
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Payment Method</Label>
                   {getPaymentMethodBadge(selectedSale.payment_method)}
-                </div>
+                        <TableCell className="hidden lg:table-cell">
                 <div className="bg-muted p-4 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal:</span>
@@ -834,6 +845,7 @@ export default function Sales() {
                   <p className="text-sm text-muted-foreground">{selectedSale.notes}</p>
                 </div>
               )}
+              </Table>
             </div>
           )}
           <DialogFooter>

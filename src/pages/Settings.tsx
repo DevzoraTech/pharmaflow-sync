@@ -211,13 +211,14 @@ export default function Settings() {
               General Settings
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pharmacyName">Pharmacy Name</Label>
               <Input 
                 id="pharmacyName" 
                 value={settings.pharmacyName}
                 onChange={(e) => updateSetting('pharmacyName', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -226,6 +227,7 @@ export default function Settings() {
                 id="address" 
                 value={settings.address}
                 onChange={(e) => updateSetting('address', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -234,6 +236,7 @@ export default function Settings() {
                 id="phone" 
                 value={settings.phone}
                 onChange={(e) => updateSetting('phone', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -243,6 +246,7 @@ export default function Settings() {
                 type="email" 
                 value={settings.email}
                 onChange={(e) => updateSetting('email', e.target.value)}
+                className="text-sm"
               />
             </div>
           </CardContent>
@@ -256,13 +260,14 @@ export default function Settings() {
               User Profile
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <Label htmlFor="userName">Full Name</Label>
               <Input 
                 id="userName" 
                 value={settings.userName}
                 onChange={(e) => updateSetting('userName', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -272,13 +277,14 @@ export default function Settings() {
                 type="email" 
                 value={settings.userEmail}
                 onChange={(e) => updateSetting('userEmail', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Input id="role" value={settings.role} disabled />
+              <Input id="role" value={settings.role} disabled className="text-sm" />
             </div>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full text-sm">
               Change Password
             </Button>
           </CardContent>
@@ -292,10 +298,10 @@ export default function Settings() {
               Notifications
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Low Stock Alerts</Label>
+                <Label className="text-sm">Low Stock Alerts</Label>
                 <p className="text-sm text-muted-foreground">Get notified when items are low in stock</p>
               </div>
               <Switch 
@@ -306,7 +312,7 @@ export default function Settings() {
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Expiry Alerts</Label>
+                <Label className="text-sm">Expiry Alerts</Label>
                 <p className="text-sm text-muted-foreground">Get notified about expiring medicines</p>
               </div>
               <Switch 
@@ -317,7 +323,7 @@ export default function Settings() {
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Email Notifications</Label>
+                <Label className="text-sm">Email Notifications</Label>
                 <p className="text-sm text-muted-foreground">Receive notifications via email</p>
               </div>
               <Switch 
@@ -328,7 +334,7 @@ export default function Settings() {
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>SMS Notifications</Label>
+                <Label className="text-sm">SMS Notifications</Label>
                 <p className="text-sm text-muted-foreground">Receive notifications via SMS</p>
               </div>
               <Switch 
@@ -347,10 +353,10 @@ export default function Settings() {
               Security
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Two-Factor Authentication</Label>
+                <Label className="text-sm">Two-Factor Authentication</Label>
                 <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
               </div>
               <Switch 
@@ -361,7 +367,7 @@ export default function Settings() {
             <Separator />
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Auto Logout</Label>
+                <Label className="text-sm">Auto Logout</Label>
                 <p className="text-sm text-muted-foreground">Automatically logout after inactivity</p>
               </div>
               <Switch 
@@ -377,6 +383,7 @@ export default function Settings() {
                 type="number" 
                 value={settings.sessionTimeout}
                 onChange={(e) => updateSetting('sessionTimeout', parseInt(e.target.value) || 30)}
+                className="text-sm"
               />
             </div>
           </CardContent>
@@ -390,13 +397,14 @@ export default function Settings() {
               System Settings
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <Label htmlFor="currency">Default Currency</Label>
               <Input 
                 id="currency" 
                 value={settings.currency}
                 onChange={(e) => updateSetting('currency', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -405,6 +413,7 @@ export default function Settings() {
                 id="timezone" 
                 value={settings.timezone}
                 onChange={(e) => updateSetting('timezone', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -413,11 +422,12 @@ export default function Settings() {
                 id="dateFormat" 
                 value={settings.dateFormat}
                 onChange={(e) => updateSetting('dateFormat', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Automatic Backups</Label>
+                <Label className="text-sm">Automatic Backups</Label>
                 <p className="text-sm text-muted-foreground">Daily system backups</p>
               </div>
               <Switch 
@@ -436,10 +446,10 @@ export default function Settings() {
               Appearance
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Dark Mode</Label>
+                <Label className="text-sm">Dark Mode</Label>
                 <p className="text-sm text-muted-foreground">Switch to dark theme</p>
               </div>
               <Switch 
@@ -454,6 +464,7 @@ export default function Settings() {
                 id="language" 
                 value={settings.language}
                 onChange={(e) => updateSetting('language', e.target.value)}
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
@@ -463,6 +474,7 @@ export default function Settings() {
                 type="number" 
                 value={settings.itemsPerPage}
                 onChange={(e) => updateSetting('itemsPerPage', parseInt(e.target.value) || 25)}
+                className="text-sm"
               />
             </div>
           </CardContent>
@@ -470,9 +482,9 @@ export default function Settings() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-center sm:justify-end">
         <Button 
-          className="gap-2" 
+          className="gap-2 w-full sm:w-auto" 
           onClick={saveSettings}
           disabled={isSaving}
         >

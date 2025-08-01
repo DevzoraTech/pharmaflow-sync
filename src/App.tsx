@@ -55,12 +55,12 @@ const App = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold">P</span>
           </div>
-          <p>Loading...</p>
+          <p className="text-sm sm:text-base">Loading...</p>
         </div>
       </div>
     );

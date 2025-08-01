@@ -120,5 +120,39 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+  }
+  
+  /* Mobile optimizations */
+  @media (max-width: 1024px) {
+    .table-container {
+      @apply overflow-x-auto;
+    }
+    
+    /* Ensure dialogs are mobile-friendly */
+    [data-radix-dialog-content] {
+      @apply max-h-[90vh] overflow-y-auto;
+    }
+    
+    /* Better touch targets on mobile */
+    button {
+      @apply min-h-[44px] min-w-[44px];
+    }
+    
+    /* Responsive text sizing */
+    .responsive-text {
+      @apply text-sm sm:text-base;
+    }
+  }
+  
+  /* Hide scrollbars but keep functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

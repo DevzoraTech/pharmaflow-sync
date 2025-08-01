@@ -347,53 +347,53 @@ export default function Staff() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Staff
             </CardTitle>
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStaff}</div>
-            <p className="text-xs text-muted-foreground">Registered employees</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalStaff}</div>
+            <p className="text-xs text-muted-foreground">Employees</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Active Today
             </CardTitle>
             <UserCheck className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{stats.activeToday}</div>
-            <p className="text-xs text-muted-foreground">Currently working</p>
+            <div className="text-xl sm:text-2xl font-bold text-success">{stats.activeToday}</div>
+            <p className="text-xs text-muted-foreground">Working</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               On Break
             </CardTitle>
             <Clock className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.onBreak}</div>
-            <p className="text-xs text-muted-foreground">Taking break</p>
+            <div className="text-xl sm:text-2xl font-bold text-warning">{stats.onBreak}</div>
+            <p className="text-xs text-muted-foreground">Break</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Hours Today
             </CardTitle>
             <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalHoursToday.toFixed(1)}</div>
-            <p className="text-xs text-muted-foreground">Total hours worked</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalHoursToday.toFixed(1)}</div>
+            <p className="text-xs text-muted-foreground">Total hrs</p>
           </CardContent>
         </Card>
       </div>
@@ -417,7 +417,7 @@ export default function Staff() {
           {/* Search and Filters */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -428,7 +428,7 @@ export default function Staff() {
                   />
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-full sm:w-48">
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -455,7 +455,8 @@ export default function Staff() {
                   Loading staff...
                 </div>
               ) : (
-                <Table>
+                <div className="overflow-x-auto">
+                  <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Employee</TableHead>
@@ -469,8 +470,8 @@ export default function Staff() {
                   <TableBody>
                     {staff.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          No staff members found matching your criteria.
+                        <TableHead className="hidden sm:table-cell">Today's Hours</TableHead>
+                        <TableHead className="hidden md:table-cell">Weekly Hours</TableHead>
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -514,23 +515,25 @@ export default function Staff() {
                                 >
                                   <XCircle className="h-3 w-3 mr-1" />
                                   Clock Out
-                                </Button>
+                            <TableCell className="hidden md:table-cell">
                               ) : (
                                 <Button
-                                  size="sm"
+                            <TableCell className="hidden sm:table-cell">
                                   onClick={() => handleClockIn(user.id)}
                                   disabled={isSubmitting || !user.is_active}
-                                  className="bg-success hover:bg-success/80 text-success-foreground shadow-sm"
-                                >
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                    className="bg-success hover:bg-success/80 text-success-foreground shadow-sm text-xs"
                                   <CheckCircle className="h-3 w-3 mr-1" />
-                                  Clock In
-                                </Button>
+                                    size="sm"
+                                    <span className="hidden sm:inline">Clock In</span>
+                                    <span className="sm:hidden">In</span>
                               )}
                               
-                              <DropdownMenu>
+                                    className="shadow-sm text-xs"
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Clock Out</span>
+                                    <span className="sm:hidden">Out</span>
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -551,7 +554,8 @@ export default function Staff() {
                       ))
                     )}
                   </TableBody>
-                </Table>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

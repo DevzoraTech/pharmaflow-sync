@@ -321,77 +321,77 @@ export default function Inventory() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Items
             </CardTitle>
             <Package className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalItems}</div>
-            <p className="text-xs text-muted-foreground">Unique medicines</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalItems}</div>
+            <p className="text-xs text-muted-foreground">Items</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Low Stock
             </CardTitle>
             <TrendingDown className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.lowStockItems}</div>
-            <p className="text-xs text-muted-foreground">Need restocking</p>
+            <div className="text-xl sm:text-2xl font-bold text-warning">{stats.lowStockItems}</div>
+            <p className="text-xs text-muted-foreground">Low</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Expiring Soon
             </CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.expiringSoon}</div>
-            <p className="text-xs text-muted-foreground">Next 30 days</p>
+            <div className="text-xl sm:text-2xl font-bold text-destructive">{stats.expiringSoon}</div>
+            <p className="text-xs text-muted-foreground">Expiring</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Out of Stock
             </CardTitle>
             <Package2 className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.outOfStock}</div>
-            <p className="text-xs text-muted-foreground">Items unavailable</p>
+            <div className="text-xl sm:text-2xl font-bold text-destructive">{stats.outOfStock}</div>
+            <p className="text-xs text-muted-foreground">Out</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Categories
             </CardTitle>
             <BarChart3 className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.categories}</div>
-            <p className="text-xs text-muted-foreground">Product categories</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.categories}</div>
+            <p className="text-xs text-muted-foreground">Types</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Value
             </CardTitle>
             <BarChart3 className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">UGX {stats.totalValue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Inventory worth</p>
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-success">UGX {stats.totalValue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Value</p>
           </CardContent>
         </Card>
       </div>
@@ -399,7 +399,7 @@ export default function Inventory() {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -410,7 +410,7 @@ export default function Inventory() {
               />
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -424,7 +424,7 @@ export default function Inventory() {
               </SelectContent>
             </Select>
             <Select value={stockFilter} onValueChange={setStockFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Stock Status" />
               </SelectTrigger>
               <SelectContent>
@@ -458,7 +458,8 @@ export default function Inventory() {
               Loading inventory...
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Medicine</TableHead>
@@ -470,19 +471,25 @@ export default function Inventory() {
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
-              </TableHeader>
+                    <TableHead className="hidden sm:table-cell">Batch</TableHead>
               <TableBody>
                 {filteredInventory.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableHead className="hidden md:table-cell">Expiry</TableHead>
+                    <TableHead className="hidden lg:table-cell">Location</TableHead>
                       {error ? 'Failed to load inventory' : 'No inventory items found matching your criteria.'}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredInventory.map((item) => {
+                              {/* Show batch and category on mobile */}
+                              <div className="sm:hidden mt-1">
+                                <div className="text-xs text-muted-foreground">
+                                  {item.batch_number} • {item.category}
+                                </div>
+                              </div>
                     const stockStatus = getStockStatus(item);
                     const expiryStatus = getExpiryStatus(item.expiry_status);
-                    
+                          <TableCell className="hidden sm:table-cell">
                     return (
                       <TableRow key={item.id}>
                         <TableCell>
@@ -501,7 +508,7 @@ export default function Inventory() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <div className="font-medium">{item.quantity}</div>
+                          <TableCell className="hidden md:table-cell">
                             <div className="text-muted-foreground">
                               Min: {item.min_stock_level}
                             </div>
@@ -509,7 +516,7 @@ export default function Inventory() {
                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <div className="font-medium">UGX {item.price.toLocaleString()}</div>
+                          <TableCell className="hidden lg:table-cell">
                           </div>
                         </TableCell>
                         <TableCell>
@@ -568,7 +575,8 @@ export default function Inventory() {
                   })
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

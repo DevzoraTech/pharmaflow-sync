@@ -105,25 +105,25 @@ export function Header({ user, onLogout }: HeaderProps) {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-gradient-card px-6 shadow-soft backdrop-blur-sm">
+    <header className="flex h-14 md:h-16 items-center justify-between border-b border-border bg-gradient-card px-4 md:px-6 shadow-soft backdrop-blur-sm">
       <div className="flex items-center gap-4 flex-1">
-        <div className="relative w-96">
+        <div className="relative w-full max-w-sm md:max-w-md lg:w-96">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search medicines, customers, prescriptions..."
-            className="pl-10 bg-background/50 backdrop-blur-sm border-0 shadow-soft"
+            className="pl-10 bg-background/50 backdrop-blur-sm border-0 shadow-soft text-sm"
           />
         </div>
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Notifications Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative hover:bg-primary/10">
+            <Button variant="ghost" size="icon" className="relative hover:bg-primary/10 h-9 w-9 md:h-10 md:w-10">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive text-destructive-foreground shadow-glow animate-pulse">
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 flex items-center justify-center p-0 text-xs bg-destructive text-destructive-foreground shadow-glow animate-pulse">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </Badge>
               )}
@@ -151,7 +151,7 @@ export function Header({ user, onLogout }: HeaderProps) {
                 No new notifications
               </div>
             ) : (
-              <ScrollArea className="h-80">
+              <ScrollArea className="h-60 md:h-80">
                 {alerts.map((alert) => (
                   <DropdownMenuItem
                     key={alert.id}
@@ -187,15 +187,15 @@ export function Header({ user, onLogout }: HeaderProps) {
         {/* User Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 h-9 w-9 md:h-10 md:w-10">
               <UserIcon className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-sm border shadow-elegant">
             <DropdownMenuLabel>
               <div>
-                <p className="font-medium">{user?.user_metadata?.name || 'User'}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="font-medium text-sm">{user?.user_metadata?.name || 'User'}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 <p className="text-xs text-muted-foreground capitalize">{user?.user_metadata?.role?.toLowerCase() || 'pharmacist'}</p>
               </div>
             </DropdownMenuLabel>

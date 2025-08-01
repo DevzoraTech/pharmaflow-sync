@@ -517,40 +517,40 @@ export default function Medicines() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Total Medicines
             </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalMedicines}</div>
-            <p className="text-xs text-muted-foreground">Across all categories</p>
+            <div className="text-xl sm:text-2xl font-bold">{stats.totalMedicines}</div>
+            <p className="text-xs text-muted-foreground">All categories</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Low Stock Items
             </CardTitle>
             <AlertTriangle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-warning">{stats.lowStockItems}</div>
+            <div className="text-xl sm:text-2xl font-bold text-warning">{stats.lowStockItems}</div>
             <p className="text-xs text-muted-foreground">Need restocking</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Expiring Soon
             </CardTitle>
             <Calendar className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{stats.expiringSoon}</div>
+            <div className="text-xl sm:text-2xl font-bold text-destructive">{stats.expiringSoon}</div>
             <p className="text-xs text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
@@ -559,7 +559,7 @@ export default function Medicines() {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -570,7 +570,7 @@ export default function Medicines() {
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
@@ -586,7 +586,7 @@ export default function Medicines() {
             </Select>
             <Button 
               variant="outline" 
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
               onClick={() => setIsFiltersOpen(!isFiltersOpen)}
             >
               <Filter className="h-4 w-4" />
@@ -597,7 +597,7 @@ export default function Medicines() {
           {/* Advanced Filters */}
           {isFiltersOpen && (
             <div className="mt-4 pt-4 border-t">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Stock Status</Label>
                   <div className="flex gap-2">
@@ -702,7 +702,8 @@ export default function Medicines() {
               Loading medicines...
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Medicine</TableHead>
@@ -714,11 +715,11 @@ export default function Medicines() {
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {medicines.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {error ? 'Failed to load medicines' : 'No medicines found matching your search criteria.'}
+                    <TableHead className="hidden sm:table-cell">Category</TableHead>
+                    <TableHead>Stock</TableHead>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm">
+                    <TableHead className="hidden md:table-cell">Expiry</TableHead>
+                    <TableHead className="hidden lg:table-cell">Location</TableHead>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -728,32 +729,36 @@ export default function Medicines() {
                     return (
                       <TableRow key={medicine.id}>
                         <TableCell>
-                          <div>
-                            <div className="font-medium">{medicine.name}</div>
+                              <div className="font-medium text-sm">{medicine.name}</div>
+                              <div className="text-xs text-muted-foreground">
                             <div className="text-sm text-muted-foreground">
                               {medicine.generic_name && `${medicine.generic_name} • `}{medicine.manufacturer}
+                              {/* Show category on mobile */}
+                              <div className="sm:hidden">
+                                <Badge variant="outline" className="text-xs mt-1">{medicine.category}</Badge>
+                              </div>
                             </div>
-                          </div>
+                          <TableCell className="hidden sm:table-cell">
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{medicine.category}</Badge>
                         </TableCell>
-                        <TableCell>
+                              <div className="font-medium text-sm">{medicine.quantity}</div>
                           <div className="space-y-1">
                             <div className="font-medium">{medicine.quantity} units</div>
                             <Badge variant={stockStatus.variant} className="text-xs">
                               {stockStatus.label}
                             </Badge>
                           </div>
-                        </TableCell>
+                            <div className="text-sm font-medium">UGX {medicine.price.toLocaleString()}</div>
                         <TableCell>UGX {medicine.price.toLocaleString()}</TableCell>
-                        <TableCell>
+                          <TableCell className="hidden md:table-cell">
                           <div className="space-y-1">
                             <div className="text-sm">{new Date(medicine.expiry_date).toLocaleDateString()}</div>
                             {getExpiryBadge(medicine.expiry_status)}
                           </div>
                         </TableCell>
-                        <TableCell>
+                          <TableCell className="hidden lg:table-cell">
                           <Badge variant="secondary">{medicine.location || 'N/A'}</Badge>
                         </TableCell>
                         <TableCell>
@@ -790,7 +795,8 @@ export default function Medicines() {
                   })
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

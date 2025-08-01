@@ -92,7 +92,7 @@ export default function AttendanceTable() {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -102,14 +102,14 @@ export default function AttendanceTable() {
                 className="pl-10"
               />
             </div>
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <Input
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
               />
             </div>
-            <Button variant="outline" onClick={fetchAttendance}>
+            <Button variant="outline" onClick={fetchAttendance} className="w-full sm:w-auto">
               <Clock className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -140,7 +140,8 @@ export default function AttendanceTable() {
               Loading attendance...
             </div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
@@ -153,12 +154,12 @@ export default function AttendanceTable() {
                   <TableHead>Notes</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {filteredAttendance.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No attendance records found for the selected date.
-                    </TableCell>
+                    <TableHead className="hidden sm:table-cell">Clock In</TableHead>
+                    <TableHead className="hidden sm:table-cell">Clock Out</TableHead>
+                    <TableHead className="hidden md:table-cell">Break Start</TableHead>
+                    <TableHead className="hidden md:table-cell">Break End</TableHead>
+                    <TableHead className="hidden lg:table-cell">Total Hours</TableHead>
+                    <TableHead className="hidden lg:table-cell">Notes</TableHead>
                   </TableRow>
                 ) : (
                   filteredAttendance.map((record) => (
@@ -168,11 +169,17 @@ export default function AttendanceTable() {
                           <div className="font-medium">{record.employee?.name || 'Unknown'}</div>
                           <div className="text-sm text-muted-foreground">
                             {record.employee?.email || ''}
+                            {/* Show hours on mobile */}
+                            <div className="lg:hidden mt-1">
+                              <div className="text-xs text-muted-foreground">
+                                Hours: {formatHours(record.total_hours)}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(record)}</TableCell>
-                      <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-2">
                           {record.clock_in ? (
                             <>
@@ -187,7 +194,7 @@ export default function AttendanceTable() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                         <div className="flex items-center gap-2">
                           {record.clock_out ? (
                             <>
@@ -207,14 +214,14 @@ export default function AttendanceTable() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{formatTime(record.break_start)}</TableCell>
-                      <TableCell>{formatTime(record.break_end)}</TableCell>
-                      <TableCell>
+                        <TableCell className="hidden md:table-cell">{formatTime(record.break_start)}</TableCell>
+                        <TableCell className="hidden md:table-cell">{formatTime(record.break_end)}</TableCell>
+                        <TableCell className="hidden lg:table-cell">
                         <div className="font-medium">
                           {formatHours(record.total_hours)}
                         </div>
                       </TableCell>
-                      <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                         <div className="text-sm text-muted-foreground max-w-32 truncate">
                           {record.notes || '-'}
                         </div>
@@ -223,7 +230,8 @@ export default function AttendanceTable() {
                   ))
                 )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
