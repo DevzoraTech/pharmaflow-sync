@@ -122,3 +122,112 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Mobile-specific utilities */
+  .mobile-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  .mobile-container {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Mobile bottom navigation safe area */
+  .mobile-bottom-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 4rem);
+  }
+  
+  /* Mobile table responsive */
+  .mobile-table {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile dialog adjustments */
+  .mobile-dialog {
+    @apply max-h-[90vh] overflow-y-auto;
+  }
+  
+  /* Mobile form responsive */
+  .mobile-form-grid {
+    @apply grid grid-cols-1 gap-4;
+  }
+  
+  @media (min-width: 768px) {
+    .mobile-form-grid {
+      @apply grid-cols-2;
+    }
+  }
+  
+  /* Mobile button responsive */
+  .mobile-button {
+    @apply w-full sm:w-auto;
+  }
+  
+  /* Mobile text responsive */
+  .mobile-text {
+    @apply text-sm md:text-base;
+  }
+  
+  .mobile-text-sm {
+    @apply text-xs md:text-sm;
+  }
+  
+  .mobile-text-lg {
+    @apply text-lg md:text-xl;
+  }
+  
+  .mobile-text-xl {
+    @apply text-xl md:text-2xl;
+  }
+  
+  .mobile-text-2xl {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  .mobile-text-3xl {
+    @apply text-3xl md:text-4xl;
+  }
+  
+  /* Mobile spacing responsive */
+  .mobile-space-y {
+    @apply space-y-4 md:space-y-6;
+  }
+  
+  .mobile-space-x {
+    @apply space-x-2 md:space-x-4;
+  }
+  
+  .mobile-gap {
+    @apply gap-4 md:gap-6;
+  }
+  
+  /* Mobile padding responsive */
+  .mobile-p {
+    @apply p-4 md:p-6;
+  }
+  
+  .mobile-px {
+    @apply px-4 md:px-6;
+  }
+  
+  .mobile-py {
+    @apply py-4 md:py-6;
+  }
+  
+  /* Mobile margin responsive */
+  .mobile-m {
+    @apply m-4 md:m-6;
+  }
+  
+  .mobile-mx {
+    @apply mx-4 md:mx-6;
+  }
+  
+  .mobile-my {
+    @apply my-4 md:my-6;
+  }
+}

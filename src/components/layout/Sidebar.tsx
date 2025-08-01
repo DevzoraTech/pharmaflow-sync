@@ -30,7 +30,7 @@ export function Sidebar() {
   const location = useLocation();
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gradient-card border-r border-border shadow-soft">
+    <div className="hidden md:flex h-full w-64 flex-col bg-gradient-card border-r border-border shadow-soft">
       <div className="flex h-16 items-center px-6 border-b border-border bg-gradient-primary">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">

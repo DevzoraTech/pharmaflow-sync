@@ -361,19 +361,19 @@ export default function Medicines() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Medicine Inventory</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Medicine Inventory</h1>
           <p className="text-muted-foreground">Manage your pharmacy's medicine stock</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               Add Medicine
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Medicine</DialogTitle>
               <DialogDescription>
@@ -381,7 +381,7 @@ export default function Medicines() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Medicine Name</Label>
                   <Input
@@ -401,7 +401,7 @@ export default function Medicines() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="manufacturer">Manufacturer</Label>
                   <Input
@@ -425,7 +425,7 @@ export default function Medicines() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantity</Label>
                   <Input
@@ -458,7 +458,7 @@ export default function Medicines() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="expiryDate">Expiry Date</Label>
                   <Input
@@ -558,8 +558,8 @@ export default function Medicines() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex gap-4">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -570,7 +570,7 @@ export default function Medicines() {
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
@@ -586,7 +586,7 @@ export default function Medicines() {
             </Select>
             <Button 
               variant="outline" 
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
               onClick={() => setIsFiltersOpen(!isFiltersOpen)}
             >
               <Filter className="h-4 w-4" />
@@ -597,7 +597,7 @@ export default function Medicines() {
           {/* Advanced Filters */}
           {isFiltersOpen && (
             <div className="mt-4 pt-4 border-t">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Stock Status</Label>
                   <div className="flex gap-2">
@@ -702,102 +702,107 @@ export default function Medicines() {
               Loading medicines...
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Medicine</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Expiry</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {medicines.length === 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {error ? 'Failed to load medicines' : 'No medicines found matching your search criteria.'}
-                    </TableCell>
+                    <TableHead>Medicine</TableHead>
+                    <TableHead className="hidden sm:table-cell">Category</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead className="hidden md:table-cell">Price</TableHead>
+                    <TableHead className="hidden lg:table-cell">Expiry</TableHead>
+                    <TableHead className="hidden lg:table-cell">Location</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ) : (
-                  medicines.map((medicine: MedicineWithStock) => {
-                    const stockStatus = getStockStatus(medicine.quantity, medicine.min_stock_level);
-                    
-                    return (
-                      <TableRow key={medicine.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{medicine.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {medicine.generic_name && `${medicine.generic_name} • `}{medicine.manufacturer}
+                </TableHeader>
+                <TableBody>
+                  {medicines.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        {error ? 'Failed to load medicines' : 'No medicines found matching your search criteria.'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    medicines.map((medicine: MedicineWithStock) => {
+                      const stockStatus = getStockStatus(medicine.quantity, medicine.min_stock_level);
+                      
+                      return (
+                        <TableRow key={medicine.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{medicine.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {medicine.generic_name && `${medicine.generic_name} • `}{medicine.manufacturer}
+                              </div>
+                              <div className="sm:hidden mt-1">
+                                <Badge variant="outline" className="text-xs">{medicine.category}</Badge>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{medicine.category}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium">{medicine.quantity} units</div>
-                            <Badge variant={stockStatus.variant} className="text-xs">
-                              {stockStatus.label}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>UGX {medicine.price.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="text-sm">{new Date(medicine.expiry_date).toLocaleDateString()}</div>
-                            {getExpiryBadge(medicine.expiry_status)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{medicine.location || 'N/A'}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => handleViewMedicine(medicine)}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEditMedicine(medicine)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Medicine
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive"
-                                onClick={() => handleDeleteMedicine(medicine)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Medicine
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <Badge variant="outline">{medicine.category}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="font-medium">{medicine.quantity} units</div>
+                              <Badge variant={stockStatus.variant} className="text-xs">
+                                {stockStatus.label}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">UGX {medicine.price.toLocaleString()}</TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <div className="space-y-1">
+                              <div className="text-sm">{new Date(medicine.expiry_date).toLocaleDateString()}</div>
+                              {getExpiryBadge(medicine.expiry_status)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <Badge variant="secondary">{medicine.location || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleViewMedicine(medicine)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditMedicine(medicine)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Medicine
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => handleDeleteMedicine(medicine)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Medicine
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* View Medicine Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Medicine Details</DialogTitle>
             <DialogDescription>
@@ -806,7 +811,7 @@ export default function Medicines() {
           </DialogHeader>
           {selectedMedicine && (
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Medicine Name</Label>
                   <p className="text-sm">{selectedMedicine.name}</p>
@@ -816,7 +821,7 @@ export default function Medicines() {
                   <p className="text-sm">{selectedMedicine.generic_name || 'N/A'}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Manufacturer</Label>
                   <p className="text-sm">{selectedMedicine.manufacturer}</p>
@@ -826,7 +831,7 @@ export default function Medicines() {
                   <Badge variant="outline">{selectedMedicine.category}</Badge>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Quantity</Label>
                   <p className="text-sm">{selectedMedicine.quantity} units</p>
@@ -840,7 +845,7 @@ export default function Medicines() {
                   <p className="text-sm">UGX {selectedMedicine.price.toLocaleString()}</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Expiry Date</Label>
                   <p className="text-sm">{new Date(selectedMedicine.expiry_date).toLocaleDateString()}</p>
@@ -860,7 +865,7 @@ export default function Medicines() {
                   <p className="text-sm">{selectedMedicine.description}</p>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Stock Status</Label>
                   <Badge variant={getStockStatus(selectedMedicine.quantity, selectedMedicine.min_stock_level).variant}>
@@ -880,7 +885,7 @@ export default function Medicines() {
 
       {/* Edit Medicine Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Medicine</DialogTitle>
             <DialogDescription>
@@ -888,7 +893,7 @@ export default function Medicines() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-name">Medicine Name</Label>
                 <Input
@@ -908,7 +913,7 @@ export default function Medicines() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-manufacturer">Manufacturer</Label>
                 <Input
@@ -932,7 +937,7 @@ export default function Medicines() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-quantity">Quantity</Label>
                 <Input
@@ -965,7 +970,7 @@ export default function Medicines() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-expiryDate">Expiry Date</Label>
                 <Input
