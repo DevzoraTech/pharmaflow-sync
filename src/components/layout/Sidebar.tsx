@@ -34,9 +34,9 @@ export function Sidebar() {
       <div className="flex h-16 items-center px-6 border-b border-border bg-gradient-primary">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <Pill className="w-6 h-6 text-white" />
+            <Pill className="w-6 h-6 text-white drop-shadow-sm" />
           </div>
-          <span className="text-xl font-bold text-white">Green Leaf</span>
+          <span className="text-xl font-bold text-white drop-shadow-sm">Green Leaf</span>
         </div>
       </div>
       

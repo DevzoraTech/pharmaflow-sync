@@ -64,9 +64,9 @@ export default function Settings() {
     email: "info@greenleaf.com",
     
     // User Profile
-    userName: "John Pharmacist",
-    userEmail: "john@greenleaf.com",
-    role: "Pharmacist",
+    userName: "Admin User",
+    userEmail: "admin@greenleaf.com",
+    role: "ADMIN",
     
     // Notifications
     lowStockAlerts: true,

@@ -507,9 +507,10 @@ export default function Staff() {
                               {user.todayAttendance?.clock_in && !user.todayAttendance?.clock_out ? (
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="destructive"
                                   onClick={() => handleClockOut(user.id)}
                                   disabled={isSubmitting}
+                                  className="shadow-sm"
                                 >
                                   <XCircle className="h-3 w-3 mr-1" />
                                   Clock Out
@@ -519,6 +520,7 @@ export default function Staff() {
                                   size="sm"
                                   onClick={() => handleClockIn(user.id)}
                                   disabled={isSubmitting || !user.is_active}
+                                  className="bg-success hover:bg-success/80 text-success-foreground shadow-sm"
                                 >
                                   <CheckCircle className="h-3 w-3 mr-1" />
                                   Clock In
