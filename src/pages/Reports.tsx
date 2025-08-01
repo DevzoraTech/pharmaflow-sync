@@ -243,11 +243,11 @@ export default function Reports() {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex gap-4 items-end">
             <div className="space-y-2">
               <Label>Time Period</Label>
               <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -268,7 +268,6 @@ export default function Reports() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full sm:w-auto"
                   />
                 </div>
                 <div className="space-y-2">
@@ -277,13 +276,12 @@ export default function Reports() {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full sm:w-auto"
                   />
                 </div>
               </>
             )}
             
-            <Button onClick={fetchReportsData} disabled={isLoading} className="w-full sm:w-auto">
+            <Button onClick={fetchReportsData} disabled={isLoading}>
               <Filter className="h-4 w-4 mr-2" />
               Apply Filters
             </Button>
@@ -324,16 +322,16 @@ export default function Reports() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
                     Total Revenue
                   </CardTitle>
                   <DollarSign className="h-4 w-4 text-success" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-success">
+                  <div className="text-2xl font-bold text-success">
                     {salesReport ? formatCurrency(salesReport.totalSales) : 'UGX 0'}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -344,13 +342,13 @@ export default function Reports() {
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
                     Inventory Value
                   </CardTitle>
                   <Package className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold">
+                  <div className="text-2xl font-bold">
                     {inventoryReport ? formatCurrency(inventoryReport.totalValue) : 'UGX 0'}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -361,13 +359,13 @@ export default function Reports() {
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
                     Total Customers
                   </CardTitle>
                   <Users className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold">
+                  <div className="text-2xl font-bold">
                     {customerReport?.totalCustomers || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -378,13 +376,13 @@ export default function Reports() {
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
                     Prescriptions
                   </CardTitle>
                   <Activity className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold">
+                  <div className="text-2xl font-bold">
                     {prescriptionReport?.totalPrescriptions || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -395,7 +393,7 @@ export default function Reports() {
             </div>
 
             {/* Quick Insights */}
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

@@ -240,53 +240,53 @@ export default function Alerts() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Unread Alerts
             </CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-destructive">{stats.unread}</div>
-            <p className="text-xs text-muted-foreground">Need attention</p>
+            <div className="text-2xl font-bold text-destructive">{stats.unread}</div>
+            <p className="text-xs text-muted-foreground">Require attention</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Stock Alerts
             </CardTitle>
             <Package className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-warning">{stats.byType.STOCK}</div>
-            <p className="text-xs text-muted-foreground">Low stock</p>
+            <div className="text-2xl font-bold text-warning">{stats.byType.STOCK}</div>
+            <p className="text-xs text-muted-foreground">Low/out of stock</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               Expiry Alerts
             </CardTitle>
             <Calendar className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-destructive">{stats.byType.EXPIRY}</div>
-            <p className="text-xs text-muted-foreground">Expiring</p>
+            <div className="text-2xl font-bold text-destructive">{stats.byType.EXPIRY}</div>
+            <p className="text-xs text-muted-foreground">Expiring soon</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               System Alerts
             </CardTitle>
             <Bell className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats.byType.SYSTEM}</div>
-            <p className="text-xs text-muted-foreground">System</p>
+            <div className="text-2xl font-bold">{stats.byType.SYSTEM}</div>
+            <p className="text-xs text-muted-foreground">System notifications</p>
           </CardContent>
         </Card>
       </div>
@@ -294,7 +294,7 @@ export default function Alerts() {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap">
             <div className="relative flex-1 min-w-64">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -305,7 +305,7 @@ export default function Alerts() {
               />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
@@ -316,7 +316,7 @@ export default function Alerts() {
               </SelectContent>
             </Select>
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="All Severities" />
               </SelectTrigger>
               <SelectContent>
@@ -329,7 +329,6 @@ export default function Alerts() {
             <Button
               variant={showUnreadOnly ? "default" : "outline"}
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-              className="w-full sm:w-auto"
             >
               <Filter className="h-4 w-4 mr-2" />
               Unread Only

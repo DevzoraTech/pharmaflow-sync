@@ -102,56 +102,56 @@ export default function Dashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Sales Today</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Sales Today</CardTitle>
             <div className="p-2 bg-primary/10 rounded-lg">
               <DollarSign className="h-5 w-5 text-primary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">UGX {stats?.totalRevenue?.toLocaleString() || '0'}</div>
-            <p className="text-xs sm:text-sm text-muted-foreground">{stats?.totalSales || 0} transactions today</p>
+            <div className="text-3xl font-bold text-foreground mb-2">UGX {stats?.totalRevenue?.toLocaleString() || '0'}</div>
+            <p className="text-sm text-muted-foreground">{stats?.totalSales || 0} transactions today</p>
           </CardContent>
         </Card>
 
         <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Medicines in Stock</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Medicines in Stock</CardTitle>
             <div className="p-2 bg-primary/10 rounded-lg">
               <Pill className="h-5 w-5 text-primary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">{stats?.totalMedicines || 0}</div>
-            <p className="text-xs sm:text-sm text-muted-foreground">{stats?.lowStockItems || 0} low stock items</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats?.totalMedicines || 0}</div>
+            <p className="text-sm text-muted-foreground">{stats?.lowStockItems || 0} low stock items</p>
           </CardContent>
         </Card>
 
         <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Customers</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Customers</CardTitle>
             <div className="p-2 bg-primary/10 rounded-lg">
               <Users className="h-5 w-5 text-primary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">{stats?.totalCustomers || 0}</div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Registered customers</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats?.totalCustomers || 0}</div>
+            <p className="text-sm text-muted-foreground">Registered customers</p>
           </CardContent>
         </Card>
 
         <Card className="hover:scale-105 transition-transform duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Expiring Soon</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Expiring Soon</CardTitle>
             <div className="p-2 bg-warning/10 rounded-lg">
               <AlertTriangle className="h-5 w-5 text-warning" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1 sm:mb-2">{stats?.expiringSoon || 0}</div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Next 30 days</p>
+            <div className="text-3xl font-bold text-foreground mb-2">{stats?.expiringSoon || 0}</div>
+            <p className="text-sm text-muted-foreground">Next 30 days</p>
           </CardContent>
         </Card>
       </div>
@@ -171,21 +171,21 @@ export default function Dashboard() {
               </div>
             ) : (
               recentActivity.map((activity) => (
-                <div key={activity.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-2 sm:gap-4">
+                <div key={activity.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                       <DollarSign className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm sm:text-base">{activity.title}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{activity.description}</p>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">{activity.description}</p>
                     </div>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="text-right">
                     {activity.amount && (
-                      <p className="font-medium text-sm sm:text-base">UGX {activity.amount.toLocaleString()}</p>
+                      <p className="font-medium">UGX {activity.amount.toLocaleString()}</p>
                     )}
-                    <p className="text-xs sm:text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {new Date(activity.timestamp).toLocaleTimeString()}
                     </p>
                   </div>
