@@ -139,8 +139,12 @@ export function Header({ user, onLogout }: HeaderProps) {
 
       // Search sales
       try {
-        const salesResponse = await salesAPI.getAll({ search: query, limit: 5 });
-        salesResponse.sales.forEach((sale) => {
+        const salesResponse = await salesAPI.getAll({ limit: 5 });
+        const filtered = salesResponse.sales.filter((sale) => {
+          const haystack = `${sale.id} ${sale.customer?.name ?? ''} ${sale.payment_method ?? ''}`.toLowerCase();
+          return haystack.includes(query.toLowerCase());
+        });
+        filtered.forEach((sale) => {
           results.push({
             type: 'sale',
             id: sale.id,
